@@ -28,13 +28,25 @@ with open(liste, 'r') as filin:
 print("Voici la liste des fichiers sur lesquels vous allez travailler", travail)
 print("Le nombre de fichier est de : {}".format(len(travail)))
 
+resultats = []
 for nom in travail:
     fasta = "{}/{}.{}".format(fasta_dir, nom, fasta_extension)
     outputdir_spe = "{}/{}".format(outputdir,nom)
-    subprocess.run(["mkdir", outputdir_spe])
+    #subprocess.run(["mkdir", outputdir_spe])
     print("##################################################")
     print("working on {}.{} file".format(nom, fasta_extension))
     print("##################################################")
-    subprocess.run(["perl", "{}".format(pmlstfinder), "-d", "{}".format(database),\
-    "-i", "{}".format(fasta), "-o", "{}".format(outputdir_spe), "-s", "incf",\
-    "-b", "{}".format(blast_path)])
+    #subprocess.run(["perl", "{}".format(pmlstfinder), "-d", "{}".format(database),\
+    #"-i", "{}".format(fasta), "-o", "{}".format(outputdir_spe), "-s", "incf",\
+    #"-b", "{}".format(blast_path)])
+    pmlst = []
+    with open("{}/results_tab.txt".format(outputdir_spe),"r") as filin:
+        for ligne in filin:
+            pmlst.append(ligne)
+        resultats.append("{};{}".format(nom,pmlst[0].split(" ")[2]))
+        for i in range(1,len(pmlst)-1):
+            resultats.append("{};{}".format(nom,pmlst[i].replace("\t",";")))
+
+with open("{}/pmlst.csv".format(outputdir),"w") as filout:
+    for ligne in resultats:
+        filout.write(ligne)
