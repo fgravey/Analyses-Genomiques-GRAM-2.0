@@ -21,12 +21,11 @@ help="Any informations such as .agp.fasta .awked.fa .scfd.fasta .fasta .fa", def
 parser.add_argument("-o", "--outputPath", dest="out_path",help="Path to blast output", default='')
 args = parser.parse_args()
 
-##### changing path
+# Defining varibales
+
 liste = args.list
-#working list which contains all the name of the working files
 fasta_dir = args.fasta_dir
-#directory which contains the fasta
-outputdir = args.out_path #path to output files
+outputdir = args.out_path
 fasta_extension = args.extension
 
 #### unchanging path
