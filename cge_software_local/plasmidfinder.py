@@ -7,12 +7,12 @@ import subprocess
 import re
 
 ##### changing path
-liste = '/Volumes/Maxtor/Back_up_pasteur/kp_caen_2018/kp_caen_2018.txt'
+liste = '/Volumes/Maxtor/Back_up_pasteur/Kp_Caen/kp_avant_2018.txt'
 #working list which contains all the name of the working files
-fasta_dir = '/Volumes/Maxtor/Back_up_pasteur/kp_caen_2018/fasta/agp_fasta'
+fasta_dir = '/Volumes/Maxtor/Back_up_pasteur/Kp_Caen/fasta/awked_fasta'
 #directory which contains the fasta
-outputdir = '/Volumes/Maxtor/Back_up_pasteur/kp_caen_2018/analyses/plasmidfinder' #path to output files
-fasta_extension = 'agp.fasta'
+outputdir = '/Volumes/Maxtor/Back_up_pasteur/Kp_Caen/Analyses/plasmides_2' #path to output files
+fasta_extension = 'awked.fasta'
 
 #### unchanging path
 plasmidfinder = '/Users/Francois/cge_softwares/plasmidfinder/plasmidfinder.py'
@@ -42,6 +42,7 @@ for nom in travail:
     with open("{}/results_tab.txt".format(outputdir2),"r") as filin:
         for ligne in filin:
             plasmide.append(ligne[:-1])
+            print(len(plasmide))
         for i in range(1,len(plasmide)):
             resultats.append("{};{}\n".format(nom,plasmide[i].replace("\t",";")))
 
