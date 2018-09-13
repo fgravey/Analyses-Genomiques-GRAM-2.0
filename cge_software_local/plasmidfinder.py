@@ -5,14 +5,29 @@
 ### module Loading
 import subprocess
 import re
+from argparse import ArgumentParser
+
+##########################################################################
+# PARSE COMMAND LINE OPTIONS
+##########################################################################
+
+parser = ArgumentParser()
+parser.add_argument("-l", "--list", dest="list",\
+help="list which contains all the names of the strains", default='')
+parser.add_argument("-f", "--fasta_dir", dest="fasta_dir",help="", \
+default='Directory which contains all the fasta files')
+parser.add_argument("-e", "--extension", dest="extension",\
+help="Any informations such as .agp.fasta .awked.fa .scfd.fasta .fasta .fa", default='')
+parser.add_argument("-o", "--outputPath", dest="out_path",help="Path to blast output", default='')
+args = parser.parse_args()
 
 ##### changing path
-liste = '/Volumes/Maxtor/Back_up_pasteur/Kp_Caen/kp_avant_2018.txt'
+liste = args.list
 #working list which contains all the name of the working files
-fasta_dir = '/Volumes/Maxtor/Back_up_pasteur/Kp_Caen/fasta/awked_fasta'
+fasta_dir = args.fasta_dir
 #directory which contains the fasta
-outputdir = '/Volumes/Maxtor/Back_up_pasteur/Kp_Caen/Analyses/plasmides_2' #path to output files
-fasta_extension = 'awked.fasta'
+outputdir = args.out_path #path to output files
+fasta_extension = args.extension
 
 #### unchanging path
 plasmidfinder = '/Users/Francois/cge_softwares/plasmidfinder/plasmidfinder.py'
@@ -30,7 +45,7 @@ print("Le nombre de fichier est de : {}".format(len(travail)))
 resultats = ["Strain;Database;Plasmide;Identities;Alignment.Length;Template.Length;\
 Position.in.reference;Contig;Position.in.contig;Note;Accession no.\n"]
 for nom in travail:
-    fasta = "{}/{}.{}".format(fasta_dir, nom, fasta_extension)
+    fasta = "{}/{}{}".format(fasta_dir, nom, fasta_extension)
     outputdir2 = "{}/{}".format(outputdir,nom)
     subprocess.run(["mkdir", outputdir2])
     print("##################################################")
@@ -42,9 +57,12 @@ for nom in travail:
     with open("{}/results_tab.txt".format(outputdir2),"r") as filin:
         for ligne in filin:
             plasmide.append(ligne[:-1])
-            print(len(plasmide))
-        for i in range(1,len(plasmide)):
-            resultats.append("{};{}\n".format(nom,plasmide[i].replace("\t",";")))
+        if len(plasmide) == 1:
+            resultats.append("{};{};no plasmid found;-;-;-;-;-;-;-;-\n"\
+            .format(nom,"Enterobacteriaceae"))
+        else:
+            for i in range(1,len(plasmide)):
+                resultats.append("{};{}\n".format(nom,plasmide[i].replace("\t",";")))
 
 with open("{}/plasmidfinder_results.csv".format(outputdir), "w") as filout:
     for res in resultats:
