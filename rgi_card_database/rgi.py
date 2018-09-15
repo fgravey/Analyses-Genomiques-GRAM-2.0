@@ -5,13 +5,14 @@
 ### module Loading
 import subprocess
 import re
+import glob
 
 ##### changing path
-liste = '/Volumes/Maxtor/Back_up_pasteur/Kp_caen/kp_avant_2018.txt'
+liste = '/Volumes/Maxtor/Back_up_pasteur/BLSE_Pasteur/blse_pasteur.txt'
 #working list which contains all the name of the working files
-fasta_dir = '/Volumes/Maxtor/Back_up_pasteur/Kp_Caen/fasta/awked_fasta'
+fasta_dir = '/Volumes/Maxtor/Back_up_pasteur/BLSE_Pasteur/fasta/fasta_files/awked_fasta'
 #directory which contains the fasta
-outputdir = '/Volumes/Maxtor/Back_up_pasteur/Kp_Caen/Analyses/card_db' #path to output files
+outputdir = '/Volumes/Maxtor/Back_up_pasteur/BLSE_Pasteur/Analyses/rgi_cardbd' #path to output files
 fasta_extension = 'awked.fasta'
 
 #listing all the files which will be working on
