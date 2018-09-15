@@ -52,7 +52,7 @@ def blast_nt_result(nom,outputdir):
     outputdir = "{}/{}".format(outputdir,nom)
     with open("{}/{}_blast_xml.txt".format(outputdir,nom)) as result_handle:
         blast_records = NCBIXML.parse(result_handle)
-        E_VALUE_THRESH = 0.04
+        E_VALUE_THRESH = 0.01
         compteur = 0 #count the number of genes found in the strain's genome
         resultats = []
         for blast_record in blast_records:
@@ -112,16 +112,15 @@ def blast_nt_result_filout(liste, fasta_dir, outputdir, fasta_extension, databas
 ####################################################################################
 
 ##### changing path
-liste = '/Volumes/Maxtor/Back_up_pasteur/Salmo_colistine_R/fichiers_test.txt'
+liste = '/Volumes/Maxtor/Back_up_pasteur/E_cloacae_F_Guerrin/ecloacae.txt'
 #working list which contains all the name of the working files
-fasta_dir = '/Volumes/Maxtor/Back_up_pasteur/Salmo_colistine_R/fasta/awked_fasta'
+fasta_dir = '/Volumes/Maxtor/Back_up_pasteur/E_cloacae_F_Guerrin/raw/fasta/agp_fasta'
 #directory which contains the fasta
-outputdir = '/Users/Francois/Desktop/essai_blast' #path to output files
-fasta_extension = 'awked.fasta'
+outputdir = '/Volumes/Maxtor/Back_up_pasteur/E_cloacae_F_Guerrin/analyses/blast' #path to output files
+fasta_extension = 'agp.fasta'
+database = '/Users/Francois/blast_data_base/ecloacae/interet/genes_ecc_fg.fasta'
+nom_fichier = 'ecc_fg_FAY_blast'
 
-#### unchanging path
-database = '/Users/Francois/blast_data_base/colistine/genes_asso_coli_R.fasta'
-
-with open("{}/Salmo_colistine_R.csv".format(outputdir), 'w') as filout:
+with open("{}/{}.csv".format(outputdir,nom_fichier), 'w') as filout:
     for results in blast_nt_result_filout(liste, fasta_dir, outputdir, fasta_extension, database):
         filout.write(results)
