@@ -4,15 +4,29 @@
 
 ### module Loading
 import subprocess
+import glob
+from argparse import ArgumentParser
 
-##### changing path
-liste = '/Volumes/shigella-ngs-1/EcCaen/Rea_neonat/Enterobase/fasta\
-/travailles_phylogenie/fasta_cluster_droit.txt'
-#working list which contains all the name of the working files
-fasta_dir = '/Volumes/shigella-ngs-1/EcCaen/Rea_neonat/Enterobase/fasta/travailles_phylogenie/cluster_droit'
-#directory which contains the fasta
-outputdir = '/Volumes/shigella-ngs-1/EcCaen/Rea_neonat/Analyses/Enterobase/Cluster_droite/fim' #path to output files
-fasta_extension = 'fasta'
+
+# PARSE COMMAND LINE OPTIONS
+##########################################################################
+parser = ArgumentParser()
+parser.add_argument("-l", "--list", dest="list", \
+help="list which contains all the name of the strains", default='')
+parser.add_argument("-o", "--outputPath", dest="out_path",\
+help="Path to blast output", default='')
+parser.add_argument("-f", "--fasta_path", dest="fasta_path_dir",\
+help="Path to the directory which contains all the fasta to analyse", default='')
+parser.add_argument("-e", "--extension", dest="extension",\
+help="fasta extension such as .fasta .fa .awked.fasta .agp.fasta ", default='')
+args = parser.parse_args()
+
+###############################################################################
+# Variables difinition
+liste = args.list
+fasta_dir = args.fasta_path_dir
+outputdir = args.out_path
+fasta_extension = args.extension
 
 #### unchanging path
 fimtyper = '/Users/Francois/cge_softwares/fimtyper/fimtyper.pl'
@@ -29,7 +43,7 @@ print("Le nombre de fichier est de : {}".format(len(travail)))
 
 #On parcours la liste et pour chaque nom, on execute fimtyper
 for nom in travail:
-    fasta = "{}/{}.{}".format(fasta_dir, nom, fasta_extension)
+    fasta = "{}/{}{}".format(fasta_dir, nom, fasta_extension)
     print("##################################################")
     print("working on {}.{} file".format(nom, fasta_extension))
     print("##################################################")
