@@ -33,4 +33,13 @@ atb_2018 = atb("/Volumes/Maxtor/Back_up_pasteur/blse_ecoli_2018_ajout/analyses/R
 
 #### Reading informations files MLST 
 mlst_2018 = mlst("/Volumes/Maxtor/Back_up_pasteur/blse_ecoli_2018_ajout/analyses/MLST/2018_MLSTfinder.txt")
-mlst_rea = mlst("/Volumes/shigella-ngs/EcCaen/Rea_neonat/Analyses/MLST/rea_MLSTfinder.txt")
+mlst_rea = mlst("/Volumes/Maxtor/Back_up_pasteur/Rea_neonat/Analyses/MLST/rea_MLSTfinder.txt")
+
+### Readling the serotype files :
+sero_2018 = sero("/Volumes/Maxtor/Back_up_pasteur/blse_ecoli_2018_ajout/analyses/Serotype/2018_SerotypeFinderColi.txt")
+
+### Reading the FimH files
+fim_rea = read.table("/Volumes/Maxtor/Back_up_pasteur/Rea_neonat/Analyses/FimH/rea_fimH_typing.txt", sep = '\t',header = TRUE, stringsAsFactors = FALSE)
+fim_rea = fim_rea[,c("Souche","FimType")]
+
+
