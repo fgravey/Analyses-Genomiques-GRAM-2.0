@@ -57,12 +57,20 @@ for nom in travail:
             resultat.append(ligne[:-1])
 
     if travail.index("{}".format(nom)) == 0:
-        with open('{}/resulats_fimH_typing.txt'.format(outputdir), 'w') as filout:
-            filout.write("{}\t{}\n".format(souche,resultat[3]))
-            filout.write("{}\t{}\n".format(nom,resultat[4]))
+        if len(resultat) == 3 :
+            with open('{}/resulats_fimH_typing.txt'.format(outputdir), 'w') as filout:
+                filout.write("{}\t{}\n".format(nom,resultat[1]))
+        else:
+            with open('{}/resulats_fimH_typing.txt'.format(outputdir), 'w') as filout:
+                filout.write("{}\t{}\n".format('souche',resultat[3]))
+                filout.write("{}\t{}\n".format(nom,resultat[4]))
     else:
-        with open('{}/resulats_fimH_typing.txt'.format(outputdir), 'a') as filout:
-            filout.write("{}\t{}\n".format(nom,resultat[4]))
+        if len(resultat) == 3 :
+            with open('{}/resulats_fimH_typing.txt'.format(outputdir), 'a') as filout:
+                filout.write("{}\t{}\n".format(nom,resultat[1]))
+        else:
+            with open('{}/resulats_fimH_typing.txt'.format(outputdir), 'a') as filout:
+                filout.write("{}\t{}\n".format(nom,resultat[4]))
 
 print("##################################################")
 print("Cleaning process")
