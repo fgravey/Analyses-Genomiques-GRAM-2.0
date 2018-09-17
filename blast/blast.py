@@ -7,6 +7,7 @@ import subprocess
 import re
 from Bio.Blast.Applications import NcbiblastxCommandline
 from Bio.Blast import NCBIXML
+from argparse import ArgumentParser
 
 ##Function defintion
 def blastn(nom,outputdir,fasta_dir):
@@ -22,10 +23,10 @@ def blastn(nom,outputdir,fasta_dir):
     outputdir = "{}/{}".format(outputdir,nom)
     subprocess.run(["mkdir", outputdir])
     #launch blast between all the files in the list and the database
-    fasta = "{}/{}.{}".format(fasta_dir,nom,fasta_extension)
+    fasta = "{}/{}{}".format(fasta_dir,nom,fasta_extension)
     subprocess.run(["blastn", "-query", "{}".format(fasta), "-db", \
     "{}".format(database), "-out", "{}/{}_blast_xml.txt".format(outputdir,nom),\
-    '-outfmt', '5'])
+    '-outfmt', '5', '-perc_identity', '0.9', '-qcov_hsp_perc', '0.9'])
     subprocess.run(["blastn", "-query", "{}".format(fasta), "-db", \
     "{}".format(database), "-out", "{}/{}_blast.txt".format(outputdir,nom)])
 
@@ -52,7 +53,7 @@ def blast_nt_result(nom,outputdir):
     outputdir = "{}/{}".format(outputdir,nom)
     with open("{}/{}_blast_xml.txt".format(outputdir,nom)) as result_handle:
         blast_records = NCBIXML.parse(result_handle)
-        E_VALUE_THRESH = 0.01
+        E_VALUE_THRESH = 0.0000001
         compteur = 0 #count the number of genes found in the strain's genome
         resultats = []
         for blast_record in blast_records:
@@ -110,16 +111,31 @@ def blast_nt_result_filout(liste, fasta_dir, outputdir, fasta_extension, databas
 ####################################################################################
 ################################# Main #############################################
 ####################################################################################
+# PARSE COMMAND LINE OPTIONS
+##########################################################################
+parser = ArgumentParser()
+parser.add_argument("-l", "--list", dest="list", \
+help="list which contains all the name of the strains", default='')
+parser.add_argument("-o", "--outputPath", dest="out_path",\
+help="Path to blast output", default='')
+parser.add_argument("-f", "--fasta_path", dest="fasta_path_dir",\
+help="Path to the directory which contains all the fasta to analyse", default='')
+parser.add_argument("-e", "--extension", dest="extension",\
+help="fasta extension such as .fasta .fa .awked.fasta .agp.fasta", default='')
+parser.add_argument("-db", "--database", dest="database",\
+help="Indicate the name of the fasta file used to create the database", default='')
+parser.add_argument("-filename", "--filename", dest="filename",\
+help="summary output file name", default='summary_blast')
+args = parser.parse_args()
 
-##### changing path
-liste = '/Volumes/Maxtor/Back_up_pasteur/E_cloacae_F_Guerrin/ecloacae.txt'
-#working list which contains all the name of the working files
-fasta_dir = '/Volumes/Maxtor/Back_up_pasteur/E_cloacae_F_Guerrin/raw/fasta/agp_fasta'
-#directory which contains the fasta
-outputdir = '/Volumes/Maxtor/Back_up_pasteur/E_cloacae_F_Guerrin/analyses/blast' #path to output files
-fasta_extension = 'agp.fasta'
-database = '/Users/Francois/blast_data_base/ecloacae/interet/genes_ecc_fg.fasta'
-nom_fichier = 'ecc_fg_FAY_blast'
+###############################################################################
+# Variables difinition
+liste = args.list
+fasta_dir = args.fasta_path_dir
+outputdir = args.out_path
+fasta_extension = args.extension
+nom_fichier = args.filename
+database = args.database
 
 with open("{}/{}.csv".format(outputdir,nom_fichier), 'w') as filout:
     for results in blast_nt_result_filout(liste, fasta_dir, outputdir, fasta_extension, database):
