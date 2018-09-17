@@ -66,9 +66,10 @@ def gene_to_protein(nom,outputdir):
                         positive = hsp.positives
                         gaps = hsp.gaps
                         sequence = hsp.query
-                        protein = "".join(traduction(sequence.lower())).upper()
-                        with open("{}/{}_{}_protein.fasta".format(outputdir,\
-                        gene,nom), "w") as filout:
+                        a_traduire = sequence.replace("-","")
+                        protein = "".join(traduction(a_traduire.lower())).upper()
+                        with open("{}/{}_{}_{}_protein.fasta".format(outputdir,\
+                        gene,nom,contig), "w") as filout:
                             filout.write(">{}-{}-{}-protein\n".format(souche, \
                             contig, gene))
                             for i in range(0,len(protein),80):
@@ -94,4 +95,4 @@ def blastp(nom,gene,outputdir,database):
     subprocess.run(["blastp", "-query", "{}".format(fasta), "-db", \
     "{}".format(database), "-out", "{}/{}_{}_blastp.txt".format(outputdir,gene,nom)])
 
-#gene_to_protein('201601729','/Users/Francois/Desktop/essai_blast')
+gene_to_protein('FAY1','/Users/Francois/Desktop/essai_blast')
