@@ -93,3 +93,12 @@ mlst = function(path){
   df$allele_number = NULL
   return(df)
 }
+
+sero = function(path){
+  df = read.table(path, header = TRUE, stringsAsFactors = FALSE)
+  df$OH = paste(gsub("wz[a-z]_","",df$O), gsub("fliC_","",df$H), sep = ":")
+  df = df[,c("file","OH")]
+  df$file = gsub("/pasteur/projets/policy01/shigella-ngs/EcCaen/Ecoli_BLSE_2018/scfd_fasta/", "", df$file)
+  df$file = gsub("_S[0-9]+.scfd.fasta", "", df$file)
+  return(df)
+}
