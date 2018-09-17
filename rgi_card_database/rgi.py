@@ -53,4 +53,5 @@ for fichier in glob.glob("{}/*.temp*".format(outputdir)):
 
 ###############################################################################
 # Creating the heatmap and clustering the strains based on atb resistance genes
-subprocess.run(["rgi", "heatmap", "-i", "{}".format(outputdir), "-clus", "samples"])
+subprocess.run(["rgi", "heatmap", "-i", "{}".format(outputdir), "-clus", "samples",\
+"-o", "{}".format(outputdir)])
