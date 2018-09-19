@@ -105,5 +105,5 @@ write.xlsx(resume_years(colim2$sulphonamide,colim2), file = "stats_colim2_avant_
            sheetName = "sulphonamide", row.names = FALSE, append = TRUE)
 write.xlsx(resume_years(colim2$tetracyclinet,colim2), file = "stats_colim2_avant_2018_essai_2.xlsx",
            sheetName = "tetracycline", row.names = FALSE, append = TRUE)
-write.csv()
+
 
