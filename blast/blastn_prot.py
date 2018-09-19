@@ -7,6 +7,7 @@ import subprocess
 import re
 from Bio.Blast.Applications import NcbiblastxCommandline
 from Bio.Blast import NCBIXML
+import glob
 
 ##Function defintion
 def traduction(liste):
@@ -46,9 +47,11 @@ def traduction(liste):
 
 	return prot
 
-def gene_to_protein(nom,outputdir):
-    outputdir = "{}/{}".format(outputdir,nom)
-    with open("{}/{}_blast_xml.txt".format(outputdir,nom)) as result_handle:
+def gene_to_protein(nom,inputdir):
+    inputdir = "{}/{}".format(inputdir, nom)
+    outputdir = "{}/protein".format(inputdir)
+    subprocess.run(["mkdir", outputdir])
+    with open("{}/{}_blast_xml.txt".format(inputdir,nom), "r") as result_handle:
         blast_records = NCBIXML.parse(result_handle)
         E_VALUE_THRESH = 0.04
         for blast_record in blast_records:
@@ -75,7 +78,7 @@ def gene_to_protein(nom,outputdir):
                             for i in range(0,len(protein),80):
                                 filout.write(protein[i:i+80]+'\n')
 
-def blastp(nom,gene,outputdir,database):
+def blastp(query, inputdir, subject, outputdir):
     """Make a directory specific to each strain which contains two blast files
     first one is a .txt file and the second one is an .xml file.
     The xml file will be parse by bipython
@@ -84,15 +87,67 @@ def blastp(nom,gene,outputdir,database):
 
     Outputs : a specific output by strain which contains the two fasta files
     """
-    outputdir = "{}/{}".format(outputdir,nom)
-    fasta = "{}/{}_{}_protein.fasta".format(outputdir,gene,nom)
-    database = "{}/{}.fasta"
+    nom = query.replace("{}/".format(inputdir), "").split("_")[0]
+    contig = query.replace("{}/".format(inputdir), "").split("_")[5]
 
-    #launch blast between all the files in the list and the database
-    subprocess.run(["blastp", "-query", "{}".format(fasta), "-db", \
-    "{}".format(database), "-out", "{}/{}_{}_blastp_xml.txt".format(outputdir,\
-    gene,nom),'-outfmt', '5'])
-    subprocess.run(["blastp", "-query", "{}".format(fasta), "-db", \
-    "{}".format(database), "-out", "{}/{}_{}_blastp.txt".format(outputdir,gene,nom)])
+    subprocess.run(["blastp", "-query", "{}".format(query), "-subject", \
+    "{}".format(subject), "-out", "{}/{}_contig_{}_blastp_xml.txt".format(outputdir,\
+    nom, contig),'-outfmt', '5'])
+    subprocess.run(["blastp", "-query", "{}".format(query), "-subject", \
+    "{}".format(subject), "-out", "{}/{}_contig_{}blastp.txt".format(outputdir,nom,contig)])
 
-gene_to_protein('FAY1','/Users/Francois/Desktop/essai_blast')
+
+def blastp_souche(nom, inputdir, db):
+    outputdir = "{}/{}/{}_blast_protein".format(inputdir,nom,nom)
+    subprocess.run(["mkdir", outputdir])
+    inputdir = "{}/{}/protein".format(inputdir,nom)
+    for fichier in glob.glob("{}/*.fasta".format(inputdir)):
+        paths = []
+        regex = re.compile("{}_".format(fichier.replace("{}/".format(inputdir), "").split("_")[0]))
+        paths.append(fichier)
+        for fichier in glob.glob("{}/*.fasta".format(db)):
+            if regex.search(fichier):
+                paths.append(fichier)
+        if len(paths) == 2:
+            #print(paths)
+            #print(outputdir)
+            blastp(paths[0], inputdir, paths[1], outputdir)
+
+#inputdir = "/Users/Francois/Desktop/essai_blast"
+#nom = "FAY1"
+#db = "/Users/Francois/blast_data_base/ecloacae/proteines_cluster_6"
+#blastp_souche(nom, inputdir, db)
+
+for fichier in glob.glob("{}/*_xml.txt".format("/Users/Francois/Desktop/essai_blast/FAY1/FAY1_blast_protein")):
+    with open(fichier, "r") as result_handle:
+        blast_records = NCBIXML.parse(result_handle)
+        E_VALUE_THRESH = 0.04
+        for blast_record in blast_records:
+            if blast_record.alignments:
+                for alignment in blast_record.alignments:
+                    for hsp in alignment.hsps:
+                        ## Variables definition
+                        #souche = nom
+                        contig = blast_record.query
+                        gene = alignment.title.split(" ")[1].split("-")[0]
+                        diff = int(alignment.length)-(int(hsp.identities)+int(hsp.gaps))
+                        longueur = alignment.length
+                        proba = hsp.expect
+                        id = hsp.identities
+                        positive = hsp.positives
+                        gaps = hsp.gaps
+                        sequence = hsp.query
+                        match = hsp.match
+                        subject = hsp.sbjct
+                        for i in range(0,len(subject)):
+                            if sequence[i] != subject[i]:
+                                print("{} remplace {} en position {}".format(sequence[i], subject[i], i))
+            else:
+                contig = blast_record.query
+                print("{} no match !!".format(contig))
+
+
+
+
+
+#gene_to_protein('FAY1','/Users/Francois/Desktop/essai_blast')
