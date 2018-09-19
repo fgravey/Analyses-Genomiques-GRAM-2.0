@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-## Aout 2018
+## Septembre 2018
 ### Gravey François
 
 ### module Loading
@@ -12,7 +12,9 @@ import glob
 ##Function defintion
 def traduction(liste):
 	"""Fonction qui traduit une séquence d'ADN issue d'un gène Fasta en une
-	séquence protéique"""
+	séquence protéique
+        Input : liste qui contient la sequence nucleotidique a a_traduire
+        Ouput : liste qui contient la sequence proteique traduite"""
 
 	prot= []
 	seq = liste
@@ -48,9 +50,21 @@ def traduction(liste):
 	return prot
 
 def gene_to_protein(nom,inputdir):
+    """Parse the _blast_xml result file and extract all the nucleotidique
+    sequences find. Then the nucleotidique sequence is translated using the
+    traduction function and write in a specific file
+        Input : nom : name of the strain
+                inputdir : general directory of the blast project
+
+        Outputs : fasta files containing the proteic sequence of all the genes
+        find in the query genome"""
+
+    #Variables definition
     inputdir = "{}/{}".format(inputdir, nom)
     outputdir = "{}/protein".format(inputdir)
     subprocess.run(["mkdir", outputdir])
+
+    #Parsing the _blast_xml.txt file
     with open("{}/{}_blast_xml.txt".format(inputdir,nom), "r") as result_handle:
         blast_records = NCBIXML.parse(result_handle)
         E_VALUE_THRESH = 0.04
@@ -98,19 +112,35 @@ def blastp(query, inputdir, subject, outputdir):
 
 
 def blastp_souche(nom, inputdir, db):
+    """ function which blastp all the proteins created against the reference proteins
+    using the blastp function
+        Input : nom = name of the strains
+                inputdir = path to the general blast project
+                db = path to the directory which contains all the reference proteins
+
+        Outputs : two blastp results file one in xml format and the second one
+        in .txt format. All the files are located in the nom_blast_protein"""
+
+    ## Variables definition and directory creation
     outputdir = "{}/{}/{}_blast_protein".format(inputdir,nom,nom)
     subprocess.run(["mkdir", outputdir])
     inputdir = "{}/{}/protein".format(inputdir,nom)
+
+    ## Looking for all the fasta files present in the protein directory
     for fichier in glob.glob("{}/*.fasta".format(inputdir)):
-        paths = []
+        paths = [] ## list which will contain the path of the query and the path of the subject
+
         regex = re.compile("{}_".format(fichier.replace("{}/".format(inputdir), "").split("_")[0]))
-        paths.append(fichier)
+        ## regex is the name of the gene which will be looked for in the protein directory and
+        ## to the db directory
+
+        paths.append(fichier) ## adding the query absolute path paths[0]
+
         for fichier in glob.glob("{}/*.fasta".format(db)):
             if regex.search(fichier):
-                paths.append(fichier)
-        if len(paths) == 2:
-            #print(paths)
-            #print(outputdir)
+                paths.append(fichier) ## adding the subject absolute directory paths[1]
+
+        if len(paths) == 2: ## check if the path contain two paths
             blastp(paths[0], inputdir, paths[1], outputdir)
 
 #inputdir = "/Users/Francois/Desktop/essai_blast"
