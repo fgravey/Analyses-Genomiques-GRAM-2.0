@@ -30,23 +30,6 @@ plasmides_trie = function(df){
   return(df_trie)
 }
 
-clean_antibio = function(df){
-  
-  df$beta.lactamase = gsub("\\([0-9]+\\.[0-9]+\\%\\,[0-9]+\\.[0-9]+\\%\\)", "", df$beta.lactamase)
-  df$aminoglycoside = gsub("\\([0-9]+\\.[0-9]+\\%\\,[0-9]+\\.[0-9]+\\%\\)", "", df$aminoglycoside)
-  df$phenicol = gsub("\\([0-9]+\\.[0-9]+\\%\\,[0-9]+\\.[0-9]+\\%\\)", "", df$phenicol)
-  df$quinolone = gsub("\\([0-9]+\\.[0-9]+\\%\\,[0-9]+\\.[0-9]+\\%\\)", "", df$quinolone)
-  df$rifampicin = gsub("\\([0-9]+\\.[0-9]+\\%\\,[0-9]+\\.[0-9]+\\%\\)", "", df$rifampicin)
-  df$colistin = gsub("\\([0-9]+\\.[0-9]+\\%\\,[0-9]+\\.[0-9]+\\%\\)", "", df$colistin)
-  df$fosfomycin = gsub("\\([0-9]+\\.[0-9]+\\%\\,[0-9]+\\.[0-9]+\\%\\)", "", df$fosfomycin)
-  df$sulphonamide = gsub("\\([0-9]+\\.[0-9]+\\%\\,[0-9]+\\.[0-9]+\\%\\)", "", df$sulphonamide)
-  df$tetracyclinet = gsub("\\([0-9]+\\.[0-9]+\\%\\,[0-9]+\\.[0-9]+\\%\\)", "", df$tetracyclinet)
-  df$trimethoprim = gsub("\\([0-9]+\\.[0-9]+\\%\\,[0-9]+\\.[0-9]+\\%\\)", "", df$trimethoprim)
-  df$macrolide = gsub("\\([0-9]+\\.[0-9]+\\%\\,[0-9]+\\.[0-9]+\\%\\)", "", df$macrolide)
-  df$vancomycin = NULL
-  
-  return(df)
-}
 
 prep.itol = function(categorie, colonne){
   vec = grepl(categorie, colonne)
@@ -56,16 +39,30 @@ prep.itol = function(categorie, colonne){
 }
 
 clean_percent = function(x){
+  # function made in order to remove all the lenght and identitites results in the dataframe
+  # could be used alone x = dt$column or in apply like as.data.frame(t(apply(df, 1, clean_percent)))
+  #in order to clean all the dataframe
   return(gsub("\\([0-9]+\\.[0-9]+\\%\\,[0-9]+\\.[0-9]+\\%\\)","",x))
 }
 
 distribution = function(x){
+  ## function which summarized a column of a dataframe in a table
+  ## could be used even if each cell of the dataframe contains several information separated by "_"
+  ## Input : df$column
+  ## Ouput : table
   var = paste(x, collapse = "_")
   var = strsplit(var, "_")[[1]]
   return(sort(table(var), decreasing = TRUE))
 }
 
 resume = function(x){
+  ## function which summarized a column of a dataframe in a new dataframe 
+  ## using the distribution function
+  ## Input : df column
+  ## output : df wich contain :
+      ## gene column : name of all the gene recovered
+      ## number : absolute number of each gene
+      ## percentages : percentage by gene
   df = data.frame(names(distribution(x)),as.vector(distribution(x)), round(as.vector(prop.table(distribution(x)))*100,digit =2))
   colnames(df) = c("genes", "number", "percentages")
   return(df)
@@ -73,6 +70,9 @@ resume = function(x){
 
 
 atb = function(path){
+  ## function which read a txt file and return a df 
+  ## Input : absolute path of a text file of resfinder result
+  ## output : dataframe with file column cleaned
   df = read.table(path,header = TRUE, stringsAsFactors = FALSE)
   df$File = gsub("Ec", "", df$File)
   df$File = gsub("_S[0-9]+.scfd.fastq.awked", "", df$File)
@@ -85,6 +85,9 @@ atb = function(path){
 }
 
 mlst = function(path){
+  ## function which read a txt file and return a df 
+  ## Input : absolute path of a text file of mlstfinder result
+  ## output : dataframe with file column cleaned
   df = read.table(path, header = TRUE, stringsAsFactors = FALSE)
   df$file = gsub("/pasteur/projets/policy01/shigella-ngs/EcCaen/Ecoli_BLSE_2018/scfd_fasta/Ec", "", df$file)
   df$file = gsub("/pasteur/projets/policy01/shigella-ngs/EcCaen/Rea_neonat/fasta/scfd_fasta/", "", df$file)
@@ -92,11 +95,13 @@ mlst = function(path){
   df$file = gsub("_S[0-9]+.scfd.fasta", "", df$file)
   df$file = gsub(".scfd.fasta", "", df$file)
   df$file = gsub(".awked.fasta", "", df$file)
-  df$allele_number = NULL
   return(df)
 }
 
 sero = function(path){
+  ## function which read a txt file and return a df 
+  ## Input : absolute path of a text file of serotypefinder result
+  ## output : dataframe with file column cleaned
   df = read.table(path, header = TRUE, stringsAsFactors = FALSE)
   df$OH = paste(gsub("wz[a-z]_","",df$O), gsub("fliC_","",df$H), sep = ":")
   df = df[,c("file","OH")]
@@ -109,6 +114,9 @@ sero = function(path){
 }
 
 fim = function(path){
+  ## function which read a txt file and return a df 
+  ## Input : absolute path of a text file of fimtyper result
+  ## output : dataframe with file column cleaned
   df = read.table(path, sep = '\t',header = TRUE, stringsAsFactors = FALSE)
   df = df[,c("Souche","Fimtype")]
   df$Souche = gsub(".agp.fasta", "", df$Souche)
@@ -117,7 +125,12 @@ fim = function(path){
 }
 
 viru = function(path){
+  ## function which read a txt file and return a df 
+  ## function which summarized all the virulence genes find in one line "virulence"
+  ## Input : absolute path of a text file of mlstfinder result
+  ## output : dataframe with file column cleaned
 df = read.table(path, header = TRUE, stringsAsFactors = FALSE)
+
 df$virulence = apply(df[,-c(1)], 1, function(a){
   a = paste(a, collapse = ";")
   a = gsub("-;-;", "", a)
@@ -127,6 +140,7 @@ df$virulence = apply(df[,-c(1)], 1, function(a){
   a = gsub("-", "_",a)
   return(a)
 })
+
 df = df[,c("file","virulence")]
 df$file = gsub("/pasteur/projets/policy01/shigella-ngs/EcCaen/run180223/fasta/","", df$file)
 df$file = gsub("/pasteur/projets/policy01/shigella-ngs/EcCaen/Rea_neonat/fasta/awked_fasta/", "", df$file)
@@ -135,22 +149,6 @@ df$file = gsub(".scfd.fastq.awked.fasta","", df$file)
 df$file = gsub(".awked.fasta","", df$file)
 df$file = gsub("_S[0-9]+.scfd.fasta", "", df$file)
 return(df)
-}
-
-clean_percent = function(x){
-  return(gsub("\\([0-9]+\\.[0-9]+\\%\\,[0-9]+\\.[0-9]+\\%\\)","",x))
-}
-
-distribution = function(x){
-  var = paste(x, collapse = "_")
-  var = strsplit(var, "_")[[1]]
-  return(sort(table(var), decreasing = TRUE))
-}
-
-resume = function(x){
-  df = data.frame(names(distribution(x)),as.vector(distribution(x)), round(as.vector(prop.table(distribution(x)))*100,digit =2))
-  colnames(df) = c("genes", "number", "percentages")
-  return(df)
 }
 
 
