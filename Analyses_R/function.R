@@ -88,8 +88,10 @@ mlst = function(path){
   df = read.table(path, header = TRUE, stringsAsFactors = FALSE)
   df$file = gsub("/pasteur/projets/policy01/shigella-ngs/EcCaen/Ecoli_BLSE_2018/scfd_fasta/Ec", "", df$file)
   df$file = gsub("/pasteur/projets/policy01/shigella-ngs/EcCaen/Rea_neonat/fasta/scfd_fasta/", "", df$file)
+  df$file = gsub("/pasteur/projets/policy01/shigella-ngs/EcCaen/BLSE/fasta/fasta_files/awked_fasta/", "", df$file)
   df$file = gsub("_S[0-9]+.scfd.fasta", "", df$file)
   df$file = gsub(".scfd.fasta", "", df$file)
+  df$file = gsub(".awked.fasta", "", df$file)
   df$allele_number = NULL
   return(df)
 }
@@ -98,7 +100,82 @@ sero = function(path){
   df = read.table(path, header = TRUE, stringsAsFactors = FALSE)
   df$OH = paste(gsub("wz[a-z]_","",df$O), gsub("fliC_","",df$H), sep = ":")
   df = df[,c("file","OH")]
-  df$file = gsub("/pasteur/projets/policy01/shigella-ngs/EcCaen/Ecoli_BLSE_2018/scfd_fasta/", "", df$file)
+  df$file = gsub("/pasteur/projets/policy01/shigella-ngs/EcCaen/Ecoli_BLSE_2018/scfd_fasta/Ec", "", df$file)
+  df$file = gsub("/pasteur/projets/policy01/shigella-ngs/EcCaen/Rea_neonat/fasta/awked_fasta/", "", df$file)
+  df$file = gsub("/pasteur/projets/policy01/shigella-ngs/EcCaen/BLSE/fasta/fasta_files/awked_fasta/", "", df$file)
   df$file = gsub("_S[0-9]+.scfd.fasta", "", df$file)
+  df$file = gsub(".awked.fasta", "", df$file)
   return(df)
+}
+
+fim = function(path){
+  df = read.table(path, sep = '\t',header = TRUE, stringsAsFactors = FALSE)
+  df = df[,c("Souche","Fimtype")]
+  df$Souche = gsub(".agp.fasta", "", df$Souche)
+  df$Souche = gsub("Ec", "", df$Souche)
+  return(df)
+}
+
+viru = function(path){
+df = read.table(path, header = TRUE, stringsAsFactors = FALSE)
+df$virulence = apply(df[,-c(1)], 1, function(a){
+  a = paste(a, collapse = ";")
+  a = gsub("-;-;", "", a)
+  a = gsub(";-", "", a)
+  a = gsub("-;", "", a)
+  a = gsub(";","-",a)
+  a = gsub("-", "_",a)
+  return(a)
+})
+df = df[,c("file","virulence")]
+df$file = gsub("/pasteur/projets/policy01/shigella-ngs/EcCaen/run180223/fasta/","", df$file)
+df$file = gsub("/pasteur/projets/policy01/shigella-ngs/EcCaen/Rea_neonat/fasta/awked_fasta/", "", df$file)
+df$file = gsub("/pasteur/projets/policy01/shigella-ngs/EcCaen/Ecoli_BLSE_2018/scfd_fasta/Ec", "", df$file)
+df$file = gsub(".scfd.fastq.awked.fasta","", df$file)
+df$file = gsub(".awked.fasta","", df$file)
+df$file = gsub("_S[0-9]+.scfd.fasta", "", df$file)
+return(df)
+}
+
+clean_percent = function(x){
+  return(gsub("\\([0-9]+\\.[0-9]+\\%\\,[0-9]+\\.[0-9]+\\%\\)","",x))
+}
+
+distribution = function(x){
+  var = paste(x, collapse = "_")
+  var = strsplit(var, "_")[[1]]
+  return(sort(table(var), decreasing = TRUE))
+}
+
+resume = function(x){
+  df = data.frame(names(distribution(x)),as.vector(distribution(x)), round(as.vector(prop.table(distribution(x)))*100,digit =2))
+  colnames(df) = c("genes", "number", "percentages")
+  return(df)
+}
+
+
+## function a retravailler +++
+resume_years = function(x,df){
+  data = merge(resume(x),resume(x[grepl("2012",df$Date.de.prel.)]), by.x = "genes", by.y = "genes", all.x = TRUE)
+  colnames(data) = c("genes", "number.total", "percentages.total", "number.2012", "percentages.2012")
+  data = merge(data,resume(x[grepl("2013",df$Date.de.prel.)]), by.x = "genes", by.y = "genes", all.x = TRUE)
+  colnames(data) = c("genes", "number.total", "percentages.total", "number.2012", "percentages.2012",
+                     "number.2013", "percentages.2013")
+  data = merge(data,resume(x[grepl("2014",df$Date.de.prel.)]), by.x = "genes", by.y = "genes", all.x = TRUE)
+  colnames(data) = c("genes", "number.total", "percentages.total", "number.2012", "percentages.2012",
+                     "number.2013", "percentages.2013","number.2014", "percentages.2014")
+  data = merge(data,resume(x[grepl("2015",df$Date.de.prel.)]), by.x = "genes", by.y = "genes", all.x = TRUE)
+  colnames(data) = c("genes", "number.total", "percentages.total","number.2012", "percentages.2012",
+                     "number.2013", "percentages.2013", "number.2014", "percentages.2014","number.2015", "percentages.2015")
+  data = merge(data,resume(x[grepl("2016",df$Date.de.prel.)]), by.x = "genes", by.y = "genes", all.x = TRUE)
+  colnames(data) = c("genes", "number.total", "percentages.total", "number.2012", "percentages.2012",
+                     "number.2013", "percentages.2013","number.2014", "percentages.2014","number.2015", 
+                     "percentages.2015", "number.2016","percentages.2016")
+  data = merge(data,resume(x[grepl("2017",df$Date.de.prel.)]), by.x = "genes", by.y = "genes", all.x = TRUE)
+  colnames(data) = c("genes", "number.total", "percentages.total","number.2012", "percentages.2012",
+                     "number.2013", "percentages.2013","number.2014", "percentages.2014","number.2015", 
+                     "percentages.2015", "number.2016","percentages.2016", "number.2017", "percentages.2017")
+  data[is.na(data)] = 0
+  data = data[order(data$number.total, decreasing = TRUE),]
+  return(data)
 }
