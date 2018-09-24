@@ -10,6 +10,11 @@ from Bio.Blast import NCBIXML
 from argparse import ArgumentParser
 
 ##Function defintion
+def reversecomplement(seq):
+    # Make reverse complement strand
+    trans = str.maketrans("ATGC", "TACG")
+    return seq.translate(trans)[::-1]
+
 def blastn(nom,outputdir,fasta_dir):
     """Make a directory specific to each strain wich contains two blast files
     first one is a .txt file and the second one is an .xml file.
@@ -26,7 +31,7 @@ def blastn(nom,outputdir,fasta_dir):
     fasta = "{}/{}{}".format(fasta_dir,nom,fasta_extension)
     subprocess.run(["blastn", "-query", "{}".format(fasta), "-db", \
     "{}".format(database), "-out", "{}/{}_blast_xml.txt".format(outputdir,nom),\
-    '-outfmt', '5', '-perc_identity', '0.9', '-qcov_hsp_perc', '0.9'])
+    '-outfmt', '5'])
     subprocess.run(["blastn", "-query", "{}".format(fasta), "-db", \
     "{}".format(database), "-out", "{}/{}_blast.txt".format(outputdir,nom)])
 
@@ -62,18 +67,71 @@ def blast_nt_result(nom,outputdir):
                 for alignment in blast_record.alignments:
                     for hsp in alignment.hsps:
                         ## Variables definition
+                        ## General information
                         souche = nom
                         contig = blast_record.query
                         gene = alignment.title.split(" ")[1].split("-")[0]
-                        diff = int(alignment.length)-(int(hsp.identities)+int(hsp.gaps))
-                        longueur = alignment.length
+                        ## query information
+                        query_start = hsp.query_start
+                        query_end = hsp.query_end
+
+                        ## Subject information
+                        subject_longueur = int(alignment.length)
+                        sbjct_start = hsp.sbjct_start
+                        sbjct_end = hsp.sbjct_end
+
+                        ## alignment information
+                        gaps = hsp.gaps
                         proba = hsp.expect
                         id = hsp.identities
                         positive = hsp.positives
-                        gaps = hsp.gaps
+                        alignement_longueur = len(str(hsp.query))
+
+                        ## calculs
                         compteur = compteur + 1
-                        resultats.append("{};{};{};{};{};{};{};{}\n".format(souche,\
-                        gene, contig,longueur, id, positive, gaps, diff))
+                        perc_ident = int(id) / float(subject_longueur) * 100
+                        coverage = ((int(alignement_longueur) - int(gaps))
+                                    / float(subject_longueur))
+                        perc_coverage = (((int(alignement_longueur) - int(gaps))
+                                          / float(subject_longueur)) * 100)
+
+                        if perc_coverage >= 80:
+                            print(gene)
+                            print(subject_longueur)
+                            print((int(query_end)+1)-int(query_start))
+                            print("coverage")
+                            print(perc_coverage)
+                            print("identity")
+                            print(perc_ident)
+                            print(sbjct_start, sbjct_end)
+                            if sbjct_start != 1 and sbjct_end != 1:
+                                print("tronquee en 5'")
+                            if sbjct_start != subject_longueur and sbjct_end != subject_longueur:
+                                print("tronquee en 3'")
+                            if sbjct_start > sbjct_end:
+                                print(">{}_sequence".format(nom))
+                                for i in range(0,len(hsp.query),80):
+                                    print(reversecomplement(hsp.query)[i:i+80])
+                                print("######################################")
+                                print(">Ref_qeuence")
+                                for i in range(0,len(hsp.sbjct),80):
+                                    print(reversecomplement(hsp.sbjct)[i:i+80])
+                                for i in range(0,len(reversecomplement(hsp.sbjct))):
+                                    if reversecomplement(hsp.sbjct)[i] != reversecomplement(hsp.query)[i]:
+                                        print("{} remplace {} en position {}".format(reversecomplement(hsp.query)[i],reversecomplement(hsp.sbjct)[i], i))
+                            else:
+                                print(">{}_sequence".format(nom))
+                                print(hsp.query)
+                                print("######################################")
+                                print(">Ref_qeuence")
+                                print(hsp.sbjct)
+                                for i in range(0,len(hsp.sbjct)):
+                                    if hsp.sbjct[i] != hsp.query[i]:
+                                        print("{} remplace {} en position {}".format(reversecomplement(hsp.query)[i],reversecomplement(hsp.sbjct)[i], i))
+                            print("\n")
+
+                        resultats.append("{};{};{};{};{};{};{}\n".format(souche,\
+                        gene, contig,subject_longueur, id, positive, gaps))
     resultats.append("le nombre de genes trouves est de {}\n".format(compteur))
     resultats = "".join(resultats)
     return resultats
@@ -137,6 +195,12 @@ fasta_extension = args.extension
 nom_fichier = args.filename
 database = args.database
 
-with open("{}/{}.csv".format(outputdir,nom_fichier), 'w') as filout:
-    for results in blast_nt_result_filout(liste, fasta_dir, outputdir, fasta_extension, database):
-        filout.write(results)
+#with open("{}/{}.csv".format(outputdir,nom_fichier), 'w') as filout:
+    #for results in blast_nt_result_filout(liste, fasta_dir, outputdir, fasta_extension, database):
+        #filout.write(results)
+
+
+fasta_extension = ".agp.fasta"
+database = "/Users/Francois/blast_data_base/ecloacae/interet/genes_ecc_fg.fasta"
+blast_nt_result("FAY1", "/Users/Francois/Desktop/essai_blast")
+#blastn("FAY1", "/Users/Francois/Desktop/essai_blast", "/Users/Francois/Desktop")
