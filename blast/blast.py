@@ -25,15 +25,15 @@ def blastn(nom,outputdir,fasta_dir):
 
     Outputs : a specific output by strain which contains the two fasta files
     """
-    outputdir = "{}{}".format(outputdir,nom)
-    subprocess.run(["mkdir", outputdir])
+    outputdir_blast = "{}/{}".format(outputdir,nom)
+    subprocess.run(["mkdir", outputdir_blast])
     #launch blast between all the files in the list and the database
     fasta = "{}{}{}".format(fasta_dir,nom,fasta_extension)
     subprocess.run(["blastn", "-query", "{}".format(fasta), "-db", \
-    "{}".format(database), "-out", "{}{}_blast_xml.txt".format(outputdir,nom),\
+    "{}".format(database), "-out", "{}/{}_blast_xml.txt".format(outputdir_blast,nom),\
     '-outfmt', '5'])
     subprocess.run(["blastn", "-query", "{}".format(fasta), "-db", \
-    "{}".format(database), "-out", "{}{}_blast.txt".format(outputdir,nom)])
+    "{}".format(database), "-out", "{}/{}_blast.txt".format(outputdir_blast,nom)])
 
 
 def blast_nt_result(nom,inputdir, threshold):
@@ -56,9 +56,11 @@ def blast_nt_result(nom,inputdir, threshold):
         separated by a ;
         """
     ## Variables definition
-    inputdir = "{}{}".format(outputdir,nom)
-    multifasta_nt_sequence_dir = "{}/{}".format(outputdir,nom)
-    with open("{}/{}_blast_xml.txt".format(outputdir,nom)) as result_handle:
+    inputdir = "{}{}".format(inputdir,nom)
+    multifasta_nt_sequence_dir = "{}{}".format(outputdir,nom)
+
+    ## Reading the xml format of the blast results file
+    with open("{}/{}_blast_xml.txt".format(inputdir,nom)) as result_handle:
         blast_records = NCBIXML.parse(result_handle)
         E_VALUE_THRESH = 0.0000001
         compteur = 0 #count the number of genes found in the strain's genome
@@ -73,6 +75,7 @@ def blast_nt_result(nom,inputdir, threshold):
                         souche = nom
                         contig = blast_record.query
                         gene = alignment.title.split(" ")[1].split("-")[0]
+
                         ## query information
                         query_start = hsp.query_start
                         query_end = hsp.query_end
@@ -97,12 +100,16 @@ def blast_nt_result(nom,inputdir, threshold):
                         perc_coverage = (((int(alignement_longueur) - int(gaps))
                                           / float(subject_longueur)) * 100)
 
+                        ## containers
+                        remarque = [] ## list which will contain all the 3' and/or 5' deletions
+                        substitutions = [] ## list which will contain all the nt substitutions
+
                         ### keeping only sequence for which coverage is > to a threshold
                         ## by default threshold = 80
-                        if perc_coverage >= "{}".format(threshold):
+                        if perc_coverage >= int(threshold):
                             print(gene)
                             print(subject_longueur)
-                            print((int(query_end)+1)-int(query_start))
+                            print(alignement_longueur)
                             print("coverage")
                             print(perc_coverage)
                             print("identity")
@@ -111,9 +118,11 @@ def blast_nt_result(nom,inputdir, threshold):
 
                             ###looking for 3' or 5' deletions
                             if sbjct_start != 1 and sbjct_end != 1:
-                                print("tronquee en 5'")
+                                remarque.append("tronquee en 5'")
                             if sbjct_start != subject_longueur and sbjct_end != subject_longueur:
-                                print("tronquee en 3'")
+                                remarque.append("tronquee en 3'")
+                            if not remarque :
+                                remarque.append("-")
 
                             ###looking for which DNA strand the gene is located
                             if sbjct_start > sbjct_end:
@@ -138,13 +147,15 @@ def blast_nt_result(nom,inputdir, threshold):
                                         print("{} remplace {} en position {}".format(reversecomplement(hsp.query)[i],reversecomplement(hsp.sbjct)[i], i))
                             print("\n")
 
-                        resultats.append("{};{};{};{};{};{};{}\n".format(souche,\
-                        gene, contig,subject_longueur, id, positive, gaps))
+                            resultats.append("{};{};{};{};{};{:.2f};{:.2f};{}\n".format(souche,\
+                            gene, contig,subject_longueur, alignement_longueur, \
+                            perc_coverage, perc_ident,"_".join(remarque)))
     resultats.append("le nombre de genes trouves est de {}\n".format(compteur))
     resultats = "".join(resultats)
+    print(resultats)
     return resultats
 
-def blast_nt_result_filout(liste, fasta_dir, outputdir, fasta_extension, database):
+def blast_nt_result_filout(liste, fasta_dir, outputdir, fasta_extension, database, threshold):
     """ Parse a .txt file which contains all the names of the strains and launch
     the blastn function and the blast_nt_result function
 
@@ -166,10 +177,11 @@ def blast_nt_result_filout(liste, fasta_dir, outputdir, fasta_extension, databas
 
     print("Voici la liste des fichiers sur lesquels vous allez travailler", travail)
     print("Le nombre de fichier est de : {}".format(len(travail)))
-    sortie = ["souche;gene;contig;longeur;nb_identites;nb_positives;nb_gaps;nb_differences\n"]
+    sortie = ["souche;gene;contig;longeur de la cible;longeur du gene;pourcentage\
+     de coverage;pourcentage d'identite;remarques\n"]
     for nom in travail:
         blastn(nom,outputdir,fasta_dir)
-        sortie.append(blast_nt_result(nom,outputdir))
+        sortie.append(blast_nt_result(nom,outputdir, threshold))
 
     return sortie
 
@@ -206,12 +218,13 @@ nom_fichier = args.filename
 database = args.database
 threshold = args.threshold
 
-#with open("{}/{}.csv".format(outputdir,nom_fichier), 'w') as filout:
-    #for results in blast_nt_result_filout(liste, fasta_dir, outputdir, fasta_extension, database):
-        #filout.write(results)
+with open("{}/{}.csv".format(outputdir,nom_fichier), 'w') as filout:
+    for results in blast_nt_result_filout(liste, fasta_dir, outputdir,\
+     fasta_extension, database, threshold):
+        filout.write(results)
 
 
-fasta_extension = ".agp.fasta"
-database = "/Users/Francois/blast_data_base/ecloacae/interet/genes_ecc_fg.fasta"
-blast_nt_result("FAY1", "/Users/Francois/Desktop/essai_blast")
+#fasta_extension = ".agp.fasta"
+#database = "/Users/Francois/blast_data_base/ecloacae/interet/genes_ecc_fg.fasta"
+#blast_nt_result("FAY1", "/Users/Francois/Desktop/essai_blast/", "90")
 #blastn("FAY1", "/Users/Francois/Desktop/essai_blast", "/Users/Francois/Desktop")
