@@ -57,13 +57,13 @@ def blast_nt_result(nom,inputdir, threshold):
         """
     ## Variables definition
     inputdir = "{}{}".format(inputdir,nom)
-    multifasta_nt_sequence_dir = "{}{}".format(outputdir,nom)
+    multifasta_nt_sequence_dir = "{}/{}_genes_sequences_fasta".format(inputdir,nom)
+    subprocess.run(["mkdir", multifasta_nt_sequence_dir])
 
     ## Reading the xml format of the blast results file
     with open("{}/{}_blast_xml.txt".format(inputdir,nom)) as result_handle:
         blast_records = NCBIXML.parse(result_handle)
         E_VALUE_THRESH = 0.0000001
-        compteur = 0 #count the number of genes found in the strain's genome
         resultats = []
         for blast_record in blast_records:
             #print(dir(blast_record))
@@ -93,6 +93,7 @@ def blast_nt_result(nom,inputdir, threshold):
                         alignement_longueur = len(str(hsp.query))
 
                         ## calculs
+                        compteur = 0 #count the number of genes found in the strain's genome
                         compteur = compteur + 1
                         perc_ident = int(id) / float(subject_longueur) * 100
                         coverage = ((int(alignement_longueur) - int(gaps))
@@ -124,28 +125,33 @@ def blast_nt_result(nom,inputdir, threshold):
                             if not remarque :
                                 remarque.append("-")
 
-                            ###looking for which DNA strand the gene is located
-                            if sbjct_start > sbjct_end:
-                                print(">{}_sequence".format(nom))
-                                for i in range(0,len(hsp.query),80):
-                                    print(reversecomplement(hsp.query)[i:i+80])
+                            with open("{}/{}_{}_nt_sequence.fasta".format(multifasta_nt_sequence_dir,gene,nom), "w") as filout:
+                                ###looking for which DNA strand the gene is located
+                                if sbjct_start > sbjct_end:
+                                    filout.write(">{}_{}_sequence".format(nom,gene)+'\n')
+                                    for i in range(0,len(hsp.query),80):
+                                        filout.write(reversecomplement(hsp.query)[i:i+80]+'\n')
 
-                                print(">Ref_qeuence")
-                                for i in range(0,len(hsp.sbjct),80):
-                                    print(reversecomplement(hsp.sbjct)[i:i+80])
-                                for i in range(0,len(reversecomplement(hsp.sbjct))):
-                                    if reversecomplement(hsp.sbjct)[i] != reversecomplement(hsp.query)[i]:
-                                        print("{} remplace {} en position {}".format(reversecomplement(hsp.query)[i],reversecomplement(hsp.sbjct)[i], i))
-                            else:
-                                print(">{}_sequence".format(nom))
-                                print(hsp.query)
-                                print("######################################")
-                                print(">Ref_qeuence")
-                                print(hsp.sbjct)
-                                for i in range(0,len(hsp.sbjct)):
-                                    if hsp.sbjct[i] != hsp.query[i]:
-                                        print("{} remplace {} en position {}".format(reversecomplement(hsp.query)[i],reversecomplement(hsp.sbjct)[i], i))
-                            print("\n")
+                                    filout.write(">{}_Ref_qeuence".format(gene)+'\n')
+                                    for i in range(0,len(hsp.sbjct),80):
+                                        filout.write(reversecomplement(hsp.sbjct)[i:i+80]+'\n')
+
+                                    for i in range(0,len(reversecomplement(hsp.sbjct))):
+                                        if reversecomplement(hsp.sbjct)[i] != reversecomplement(hsp.query)[i]:
+                                            print("{} remplace {} en position {}".format(reversecomplement(hsp.query)[i],reversecomplement(hsp.sbjct)[i], i))
+                                else:
+                                    filout.write(">{}_{}_sequence".format(nom,gene)+'\n')
+                                    for i in range(0,len(hsp.query),80):
+                                        filout.write(hsp.query[i:i+80]+'\n')
+
+                                    filout.write(">{}_Ref_qeuence".format(gene)+'\n')
+                                    for i in range(0,len(hsp.sbjct),80):
+                                        filout.write(hsp.sbjct[i:i+80]+'\n')
+
+                                    for i in range(0,len(hsp.sbjct)):
+                                        if hsp.sbjct[i] != hsp.query[i]:
+                                            print("{} remplace {} en position {}".format(reversecomplement(hsp.query)[i],reversecomplement(hsp.sbjct)[i], i))
+                                print("\n")
 
                             resultats.append("{};{};{};{};{};{:.2f};{:.2f};{}\n".format(souche,\
                             gene, contig,subject_longueur, alignement_longueur, \
