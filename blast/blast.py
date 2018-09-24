@@ -25,18 +25,18 @@ def blastn(nom,outputdir,fasta_dir):
 
     Outputs : a specific output by strain which contains the two fasta files
     """
-    outputdir = "{}/{}".format(outputdir,nom)
+    outputdir = "{}{}".format(outputdir,nom)
     subprocess.run(["mkdir", outputdir])
     #launch blast between all the files in the list and the database
-    fasta = "{}/{}{}".format(fasta_dir,nom,fasta_extension)
+    fasta = "{}{}{}".format(fasta_dir,nom,fasta_extension)
     subprocess.run(["blastn", "-query", "{}".format(fasta), "-db", \
-    "{}".format(database), "-out", "{}/{}_blast_xml.txt".format(outputdir,nom),\
+    "{}".format(database), "-out", "{}{}_blast_xml.txt".format(outputdir,nom),\
     '-outfmt', '5'])
     subprocess.run(["blastn", "-query", "{}".format(fasta), "-db", \
-    "{}".format(database), "-out", "{}/{}_blast.txt".format(outputdir,nom)])
+    "{}".format(database), "-out", "{}{}_blast.txt".format(outputdir,nom)])
 
 
-def blast_nt_result(nom,outputdir):
+def blast_nt_result(nom,inputdir, threshold):
     """ Parse the .xml file in order to extract specific informations such as :
             - contig in which the gene of interest have been recovered
             - name of the gene of interest
@@ -55,7 +55,9 @@ def blast_nt_result(nom,outputdir):
         Outputs : resultats = list which contains all the extracted informations
         separated by a ;
         """
-    outputdir = "{}/{}".format(outputdir,nom)
+    ## Variables definition
+    inputdir = "{}{}".format(outputdir,nom)
+    multifasta_nt_sequence_dir = "{}/{}".format(outputdir,nom)
     with open("{}/{}_blast_xml.txt".format(outputdir,nom)) as result_handle:
         blast_records = NCBIXML.parse(result_handle)
         E_VALUE_THRESH = 0.0000001
@@ -95,7 +97,9 @@ def blast_nt_result(nom,outputdir):
                         perc_coverage = (((int(alignement_longueur) - int(gaps))
                                           / float(subject_longueur)) * 100)
 
-                        if perc_coverage >= 80:
+                        ### keeping only sequence for which coverage is > to a threshold
+                        ## by default threshold = 80
+                        if perc_coverage >= "{}".format(threshold):
                             print(gene)
                             print(subject_longueur)
                             print((int(query_end)+1)-int(query_start))
@@ -104,15 +108,19 @@ def blast_nt_result(nom,outputdir):
                             print("identity")
                             print(perc_ident)
                             print(sbjct_start, sbjct_end)
+
+                            ###looking for 3' or 5' deletions
                             if sbjct_start != 1 and sbjct_end != 1:
                                 print("tronquee en 5'")
                             if sbjct_start != subject_longueur and sbjct_end != subject_longueur:
                                 print("tronquee en 3'")
+
+                            ###looking for which DNA strand the gene is located
                             if sbjct_start > sbjct_end:
                                 print(">{}_sequence".format(nom))
                                 for i in range(0,len(hsp.query),80):
                                     print(reversecomplement(hsp.query)[i:i+80])
-                                print("######################################")
+
                                 print(">Ref_qeuence")
                                 for i in range(0,len(hsp.sbjct),80):
                                     print(reversecomplement(hsp.sbjct)[i:i+80])
@@ -184,6 +192,8 @@ parser.add_argument("-db", "--database", dest="database",\
 help="Indicate the name of the fasta file used to create the database", default='')
 parser.add_argument("-filename", "--filename", dest="filename",\
 help="summary output file name", default='summary_blast')
+parser.add_argument("-t", "--threshold", dest="threshold",\
+help="minimum percentage of coverage int", default='80')
 args = parser.parse_args()
 
 ###############################################################################
@@ -194,6 +204,7 @@ outputdir = args.out_path
 fasta_extension = args.extension
 nom_fichier = args.filename
 database = args.database
+threshold = args.threshold
 
 #with open("{}/{}.csv".format(outputdir,nom_fichier), 'w') as filout:
     #for results in blast_nt_result_filout(liste, fasta_dir, outputdir, fasta_extension, database):
