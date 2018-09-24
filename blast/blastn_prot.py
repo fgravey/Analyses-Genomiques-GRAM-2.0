@@ -169,9 +169,15 @@ for fichier in glob.glob("{}/*_xml.txt".format("/Users/Francois/Desktop/essai_bl
                         sequence = hsp.query
                         match = hsp.match
                         subject = hsp.sbjct
-                        for i in range(0,len(subject)):
-                            if sequence[i] != subject[i]:
-                                print("{} remplace {} en position {}".format(sequence[i], subject[i], i))
+                        print(contig)
+                        print(gene)
+                        #print(diff)
+                        #print(sequence)
+                        #print(subject)
+                        print(match)
+                        #for i in range(0,len(subject)):
+                            #if sequence[i] != subject[i]:
+                                #print("{} remplace {} en position {}".format(sequence[i], subject[i], i))
             else:
                 contig = blast_record.query
                 print("{} no match !!".format(contig))
