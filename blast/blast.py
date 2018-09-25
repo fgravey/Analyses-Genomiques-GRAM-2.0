@@ -8,6 +8,7 @@ import re
 from Bio.Blast.Applications import NcbiblastxCommandline
 from Bio.Blast import NCBIXML
 from argparse import ArgumentParser
+import glob
 
 ##Function defintion
 def reversecomplement(seq):
@@ -108,14 +109,6 @@ def blast_nt_result(nom,inputdir, threshold):
                         ### keeping only sequence for which coverage is > to a threshold
                         ## by default threshold = 80
                         if perc_coverage >= int(threshold):
-                            # print(gene)
-                            # print(subject_longueur)
-                            # print(alignement_longueur)
-                            # print("coverage")
-                            # print(perc_coverage)
-                            # print("identity")
-                            # print(perc_ident)
-
 
                             ###looking for 3' or 5' deletions
                             if sbjct_start != 1 and sbjct_end != 1:
@@ -160,6 +153,7 @@ def blast_nt_result(nom,inputdir, threshold):
                             .format(souche,gene, contig,subject_longueur, \
                             alignement_longueur, perc_coverage, perc_ident,\
                             "_".join(remarque),",".join(substitutions),nb_substitutions))
+
     resultats.append("le nombre de genes trouves est de {}\n".format(compteur))
     resultats = "".join(resultats)
 
@@ -228,13 +222,41 @@ nom_fichier = args.filename
 database = args.database
 threshold = args.threshold
 
-with open("{}{}.csv".format(outputdir,nom_fichier), 'w') as filout:
-    for results in blast_nt_result_filout(liste, fasta_dir, outputdir,\
-     fasta_extension, database, threshold):
-        filout.write(results)
+#with open("{}{}.csv".format(outputdir,nom_fichier), 'w') as filout:
+    #for results in blast_nt_result_filout(liste, fasta_dir, outputdir,\
+     #fasta_extension, database, threshold):
+        #filout.write(results)
 
 
 #fasta_extension = ".agp.fasta"
 #database = "/Users/Francois/blast_data_base/ecloacae/interet/genes_ecc_fg.fasta"
 #blast_nt_result("FAY1", "/Users/Francois/Desktop/essai_blast/", "90")
 #blastn("FAY1", "/Users/Francois/Desktop/essai_blast", "/Users/Francois/Desktop")
+
+travail = []
+input = outputdir
+with open(liste, 'r') as filin:
+    for nom in filin:
+        travail.append(nom[:-1])
+
+genes = []
+for fichier in glob.glob("{}/{}/{}_genes_sequences_fasta/*.fasta".format(input, travail[0],travail[0])):
+    genes.append((fichier.split("/")[-1]).split("_")[0])
+
+multifasta_gene_output = "{}/multifasta_nt".format(input)
+subprocess.run(["mkdir", multifasta_gene_output])
+for g in genes:
+    regex = re.compile("{}_".format(g))
+    regex_2 = re.compile("^>")
+    with open("{}/{}_multifasta.fasta".format(multifasta_gene_output, g), "w") as filout:
+        for nom in travail:
+            for fichier in glob.glob("{}/{}/{}_genes_sequences_fasta/*.fasta".format(input, nom,nom)):
+                if regex.search(fichier):
+                    with open("{}".format(fichier), "r") as filin:
+                        ligne = filin.readline()
+                        if regex_2.search(ligne):
+                            filout.write(ligne)
+                            ligne = filin.readline()
+                            while regex_2.search(ligne) == None:
+                                filout.write(ligne)
+                                ligne = filin.readline()
