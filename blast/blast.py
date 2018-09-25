@@ -65,6 +65,7 @@ def blast_nt_result(nom,inputdir, threshold):
         blast_records = NCBIXML.parse(result_handle)
         E_VALUE_THRESH = 0.0000001
         resultats = []
+        compteur = 0 #count the number of genes found in the strain's genome
         for blast_record in blast_records:
             #print(dir(blast_record))
             if blast_record.alignments:
@@ -93,7 +94,6 @@ def blast_nt_result(nom,inputdir, threshold):
                         alignement_longueur = len(str(hsp.query))
 
                         ## calculs
-                        compteur = 0 #count the number of genes found in the strain's genome
                         compteur = compteur + 1
                         perc_ident = int(id) / float(subject_longueur) * 100
                         coverage = ((int(alignement_longueur) - int(gaps))
@@ -108,14 +108,14 @@ def blast_nt_result(nom,inputdir, threshold):
                         ### keeping only sequence for which coverage is > to a threshold
                         ## by default threshold = 80
                         if perc_coverage >= int(threshold):
-                            print(gene)
-                            print(subject_longueur)
-                            print(alignement_longueur)
-                            print("coverage")
-                            print(perc_coverage)
-                            print("identity")
-                            print(perc_ident)
-                            print(sbjct_start, sbjct_end)
+                            # print(gene)
+                            # print(subject_longueur)
+                            # print(alignement_longueur)
+                            # print("coverage")
+                            # print(perc_coverage)
+                            # print("identity")
+                            # print(perc_ident)
+
 
                             ###looking for 3' or 5' deletions
                             if sbjct_start != 1 and sbjct_end != 1:
@@ -138,7 +138,7 @@ def blast_nt_result(nom,inputdir, threshold):
 
                                     for i in range(0,len(reversecomplement(hsp.sbjct))):
                                         if reversecomplement(hsp.sbjct)[i] != reversecomplement(hsp.query)[i]:
-                                            print("{} remplace {} en position {}".format(reversecomplement(hsp.query)[i],reversecomplement(hsp.sbjct)[i], i))
+                                            substitutions.append("{} remplace {} en position {}".format(reversecomplement(hsp.query)[i],reversecomplement(hsp.sbjct)[i], i))
                                 else:
                                     filout.write(">{}_{}_sequence".format(nom,gene)+'\n')
                                     for i in range(0,len(hsp.query),80):
@@ -150,15 +150,19 @@ def blast_nt_result(nom,inputdir, threshold):
 
                                     for i in range(0,len(hsp.sbjct)):
                                         if hsp.sbjct[i] != hsp.query[i]:
-                                            print("{} remplace {} en position {}".format(reversecomplement(hsp.query)[i],reversecomplement(hsp.sbjct)[i], i))
-                                print("\n")
+                                            substitutions.append("{} remplace {} en position {}".format(reversecomplement(hsp.query)[i],reversecomplement(hsp.sbjct)[i], i))
 
-                            resultats.append("{};{};{};{};{};{:.2f};{:.2f};{}\n".format(souche,\
-                            gene, contig,subject_longueur, alignement_longueur, \
-                            perc_coverage, perc_ident,"_".join(remarque)))
+                            nb_substitutions = len(substitutions)
+                            if not substitutions:
+                                substitutions.append('-')
+
+                            resultats.append("{};{};{};{};{};{:.2f};{:.2f};{};{};{}\n"\
+                            .format(souche,gene, contig,subject_longueur, \
+                            alignement_longueur, perc_coverage, perc_ident,\
+                            "_".join(remarque),",".join(substitutions),nb_substitutions))
     resultats.append("le nombre de genes trouves est de {}\n".format(compteur))
     resultats = "".join(resultats)
-    print(resultats)
+
     return resultats
 
 def blast_nt_result_filout(liste, fasta_dir, outputdir, fasta_extension, database, threshold):
@@ -184,7 +188,7 @@ def blast_nt_result_filout(liste, fasta_dir, outputdir, fasta_extension, databas
     print("Voici la liste des fichiers sur lesquels vous allez travailler", travail)
     print("Le nombre de fichier est de : {}".format(len(travail)))
     sortie = ["souche;gene;contig;longeur de la cible;longeur du gene;pourcentage\
-     de coverage;pourcentage d'identite;remarques\n"]
+     de coverage;pourcentage d'identite;remarques;substitutions nucleotidiques;nombre de substitutions nucleotidiques\n"]
     for nom in travail:
         blastn(nom,outputdir,fasta_dir)
         sortie.append(blast_nt_result(nom,outputdir, threshold))
@@ -224,7 +228,7 @@ nom_fichier = args.filename
 database = args.database
 threshold = args.threshold
 
-with open("{}/{}.csv".format(outputdir,nom_fichier), 'w') as filout:
+with open("{}{}.csv".format(outputdir,nom_fichier), 'w') as filout:
     for results in blast_nt_result_filout(liste, fasta_dir, outputdir,\
      fasta_extension, database, threshold):
         filout.write(results)
