@@ -190,7 +190,7 @@ def blast_nt_result_filout(liste, fasta_dir, outputdir, fasta_extension, databas
 
     return sortie
 
-def multifasta_nt(liste, outputdir):
+def multifasta_nt(liste, outputdir, database):
     """ Parse a .txt file which contains all the names of the strains and launch
         the blastn function and the blast_nt_result function
 
@@ -217,8 +217,28 @@ def multifasta_nt(liste, outputdir):
         # regex definition
         regex = re.compile("{}_".format(g)) #Name of the genes
         regex_2 = re.compile("^>") #Looking for header in fasta file
+        regex_3 = re.compile("^>{}_".format(g))
 
         with open("{}/{}_multifasta.fasta".format(multifasta_gene_output, g), "w") as filout:
+            with open("{}".format(database), "r") as filin:
+                ligne = filin.readline()
+                while regex_3.search(ligne) == None:
+                    ligne = filin.readline()
+
+                if regex_3.search(ligne):
+                    filout.write(ligne[:-1]+'_reference_sequence\n')
+                    ligne = filin.readline()
+
+                    sequence = []
+                    while regex_2.search(ligne) == None and ligne != '':
+                        sequence.append(ligne[:-1])
+                        ligne = filin.readline()
+
+                    sequence = ''.join(sequence)
+                    for i in range(0,len(sequence),80):
+                        filout.write(sequence[i:i+80]+'\n')
+
+        with open("{}/{}_multifasta.fasta".format(multifasta_gene_output, g), "a") as filout:
             for nom in travail:
                 for fichier in glob.glob("{}/{}/{}_genes_sequences_fasta/*.fasta".format(input, nom,nom)):
                     if regex.search(fichier):
@@ -227,7 +247,7 @@ def multifasta_nt(liste, outputdir):
                             if regex_2.search(ligne):
                                 filout.write(ligne)
                                 ligne = filin.readline()
-                                while regex_2.search(ligne) == None:
+                                while regex_2.search(ligne) == None and ligne != '':
                                     filout.write(ligne)
                                     ligne = filin.readline()
 
@@ -271,4 +291,4 @@ if __name__ == "__main__":
          fasta_extension, database, threshold):
             filout.write(results)
 
-    multifasta_nt(liste,outputdir)
+    multifasta_nt(liste,outputdir,database)
