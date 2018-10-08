@@ -95,7 +95,6 @@ def blast_nt_result(nom,inputdir, threshold):
                         alignement_longueur = len(str(hsp.query))
 
                         ## calculs
-                        compteur = compteur + 1
                         perc_ident = int(id) / float(subject_longueur) * 100
                         coverage = ((int(alignement_longueur) - int(gaps))
                                     / float(subject_longueur))
@@ -109,6 +108,7 @@ def blast_nt_result(nom,inputdir, threshold):
                         ### keeping only sequence for which coverage is > to a threshold
                         ## by default threshold = 80
                         if perc_coverage >= int(threshold):
+                            compteur = compteur + 1
 
                             ###looking for 3' or 5' deletions
                             if sbjct_start != 1 and sbjct_end != 1:
@@ -137,7 +137,7 @@ def blast_nt_result(nom,inputdir, threshold):
                                     for i in range(0,len(hsp.query),80):
                                         filout.write(hsp.query[i:i+80]+'\n')
 
-                                    filout.write(">{}_Ref_qeuence".format(gene)+'\n')
+                                    filout.write(">{}_Ref_sequence".format(gene)+'\n')
                                     for i in range(0,len(hsp.sbjct),80):
                                         filout.write(hsp.sbjct[i:i+80]+'\n')
 
@@ -152,9 +152,10 @@ def blast_nt_result(nom,inputdir, threshold):
                             resultats.append("{};{};{};{};{};{:.2f};{:.2f};{};{};{}\n"\
                             .format(souche,gene, contig,subject_longueur, \
                             alignement_longueur, perc_coverage, perc_ident,\
-                            "_".join(remarque),",".join(substitutions),nb_substitutions))
+                            "_".join(remarque),nb_substitutions,",".join(substitutions)))
 
-    resultats.append("le nombre de genes trouves est de {}\n".format(compteur))
+    resultats.append("le nombre de genes trouves est de {};{};{};{};{};{};{};{};{};{}\n".\
+    format(compteur, "-", "-", "-", "-", "-", "-", "-", "-", "-"))
     resultats = "".join(resultats)
 
     return resultats
@@ -182,12 +183,53 @@ def blast_nt_result_filout(liste, fasta_dir, outputdir, fasta_extension, databas
     print("Voici la liste des fichiers sur lesquels vous allez travailler", travail)
     print("Le nombre de fichier est de : {}".format(len(travail)))
     sortie = ["souche;gene;contig;longeur de la cible;longeur du gene;pourcentage\
-     de coverage;pourcentage d'identite;remarques;substitutions nucleotidiques;nombre de substitutions nucleotidiques\n"]
+     de coverage;pourcentage d'identite;remarques;nombre de substitutions nucleotidiques;substitutions nucleotidiques\n"]
     for nom in travail:
         blastn(nom,outputdir,fasta_dir)
         sortie.append(blast_nt_result(nom,outputdir, threshold))
 
     return sortie
+
+def multifasta_nt(liste, outputdir):
+    """ Parse a .txt file which contains all the names of the strains and launch
+        the blastn function and the blast_nt_result function
+
+        Inputs : liste = .txt file which contains all the name of the strains
+                 outputdir = general directory which will contain all the subdirectories
+
+        Outputs : multi-sequence fasta file, one per gene, which contains all the sequences
+    find in each strain """
+
+    travail = [] #list which will contain all the strains name
+    input = outputdir
+    with open(liste, 'r') as filin:
+        for nom in filin:
+            travail.append(nom[:-1]) #adding to travail list all the strain names
+
+    genes = [] #empty list which will contain all the genes name find by blast whit the first strain
+    for fichier in glob.glob("{}/{}/{}_genes_sequences_fasta/*.fasta".format(input, travail[0],travail[0])):
+        genes.append((fichier.split("/")[-1]).split("_")[0])
+
+    multifasta_gene_output = "{}/multifasta_nt".format(input) ## Creation of a directory
+    subprocess.run(["mkdir", multifasta_gene_output])
+
+    for g in genes:
+        # regex definition
+        regex = re.compile("{}_".format(g)) #Name of the genes
+        regex_2 = re.compile("^>") #Looking for header in fasta file
+
+        with open("{}/{}_multifasta.fasta".format(multifasta_gene_output, g), "w") as filout:
+            for nom in travail:
+                for fichier in glob.glob("{}/{}/{}_genes_sequences_fasta/*.fasta".format(input, nom,nom)):
+                    if regex.search(fichier):
+                        with open("{}".format(fichier), "r") as filin:
+                            ligne = filin.readline()
+                            if regex_2.search(ligne):
+                                filout.write(ligne)
+                                ligne = filin.readline()
+                                while regex_2.search(ligne) == None:
+                                    filout.write(ligne)
+                                    ligne = filin.readline()
 
 
 ####################################################################################
@@ -213,50 +255,20 @@ help="minimum percentage of coverage int", default='80')
 args = parser.parse_args()
 
 ###############################################################################
-# Variables difinition
-liste = args.list
-fasta_dir = args.fasta_path_dir
-outputdir = args.out_path
-fasta_extension = args.extension
-nom_fichier = args.filename
-database = args.database
-threshold = args.threshold
 
-#with open("{}{}.csv".format(outputdir,nom_fichier), 'w') as filout:
-    #for results in blast_nt_result_filout(liste, fasta_dir, outputdir,\
-     #fasta_extension, database, threshold):
-        #filout.write(results)
+if __name__ == "__main__":
+    # Variables difinition
+    liste = args.list
+    fasta_dir = args.fasta_path_dir
+    outputdir = args.out_path
+    fasta_extension = args.extension
+    nom_fichier = args.filename
+    database = args.database
+    threshold = args.threshold
 
+    with open("{}{}.csv".format(outputdir,nom_fichier), 'w') as filout:
+        for results in blast_nt_result_filout(liste, fasta_dir, outputdir,\
+         fasta_extension, database, threshold):
+            filout.write(results)
 
-#fasta_extension = ".agp.fasta"
-#database = "/Users/Francois/blast_data_base/ecloacae/interet/genes_ecc_fg.fasta"
-#blast_nt_result("FAY1", "/Users/Francois/Desktop/essai_blast/", "90")
-#blastn("FAY1", "/Users/Francois/Desktop/essai_blast", "/Users/Francois/Desktop")
-
-travail = []
-input = outputdir
-with open(liste, 'r') as filin:
-    for nom in filin:
-        travail.append(nom[:-1])
-
-genes = []
-for fichier in glob.glob("{}/{}/{}_genes_sequences_fasta/*.fasta".format(input, travail[0],travail[0])):
-    genes.append((fichier.split("/")[-1]).split("_")[0])
-
-multifasta_gene_output = "{}/multifasta_nt".format(input)
-subprocess.run(["mkdir", multifasta_gene_output])
-for g in genes:
-    regex = re.compile("{}_".format(g))
-    regex_2 = re.compile("^>")
-    with open("{}/{}_multifasta.fasta".format(multifasta_gene_output, g), "w") as filout:
-        for nom in travail:
-            for fichier in glob.glob("{}/{}/{}_genes_sequences_fasta/*.fasta".format(input, nom,nom)):
-                if regex.search(fichier):
-                    with open("{}".format(fichier), "r") as filin:
-                        ligne = filin.readline()
-                        if regex_2.search(ligne):
-                            filout.write(ligne)
-                            ligne = filin.readline()
-                            while regex_2.search(ligne) == None:
-                                filout.write(ligne)
-                                ligne = filin.readline()
+    multifasta_nt(liste,outputdir)
