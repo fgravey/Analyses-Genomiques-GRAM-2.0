@@ -125,9 +125,9 @@ def blast_nt_result(nom,inputdir, threshold):
                                     for i in range(0,len(hsp.query),80):
                                         filout.write(reversecomplement(hsp.query)[i:i+80]+'\n')
 
-                                    filout.write(">{}_Ref_qeuence".format(gene)+'\n')
-                                    for i in range(0,len(hsp.sbjct),80):
-                                        filout.write(reversecomplement(hsp.sbjct)[i:i+80]+'\n')
+                                    #filout.write(">{}_Ref_qeuence".format(gene)+'\n')
+                                    #for i in range(0,len(hsp.sbjct),80):
+                                        #filout.write(reversecomplement(hsp.sbjct)[i:i+80]+'\n')
 
                                     for i in range(0,len(reversecomplement(hsp.sbjct))):
                                         if reversecomplement(hsp.sbjct)[i] != reversecomplement(hsp.query)[i]:
@@ -137,13 +137,13 @@ def blast_nt_result(nom,inputdir, threshold):
                                     for i in range(0,len(hsp.query),80):
                                         filout.write(hsp.query[i:i+80]+'\n')
 
-                                    filout.write(">{}_Ref_sequence".format(gene)+'\n')
-                                    for i in range(0,len(hsp.sbjct),80):
-                                        filout.write(hsp.sbjct[i:i+80]+'\n')
+                                    #filout.write(">{}_Ref_sequence".format(gene)+'\n')
+                                    #for i in range(0,len(hsp.sbjct),80):
+                                        #filout.write(hsp.sbjct[i:i+80]+'\n')
 
                                     for i in range(0,len(hsp.sbjct)):
                                         if hsp.sbjct[i] != hsp.query[i]:
-                                            substitutions.append("{} remplace {} en position {}".format(reversecomplement(hsp.query)[i],reversecomplement(hsp.sbjct)[i], i))
+                                            substitutions.append("{} remplace {} en position {}".format(hsp.query[i],hsp.sbjct[i], i))
 
                             nb_substitutions = len(substitutions)
                             if not substitutions:
@@ -185,6 +185,10 @@ def blast_nt_result_filout(liste, fasta_dir, outputdir, fasta_extension, databas
     sortie = ["souche;gene;contig;longeur de la cible;longeur du gene;pourcentage\
      de coverage;pourcentage d'identite;remarques;nombre de substitutions nucleotidiques;substitutions nucleotidiques\n"]
     for nom in travail:
+        print("############################################################################")
+        print("########################### Working on {} ###############################".format(nom))
+        print("############################################################################")
+        print('\n')
         blastn(nom,outputdir,fasta_dir)
         sortie.append(blast_nt_result(nom,outputdir, threshold))
 
