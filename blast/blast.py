@@ -121,6 +121,7 @@ def blast_nt_result(nom,inputdir, threshold):
                             with open("{}/{}_{}_nt_sequence.fasta".format(multifasta_nt_sequence_dir,gene,nom), "w") as filout:
                                 ###looking for which DNA strand the gene is located
                                 if sbjct_start > sbjct_end:
+                                    dna_strand = "-1"
                                     filout.write(">{}_{}_sequence".format(nom,gene)+'\n')
                                     for i in range(0,len(hsp.query),80):
                                         filout.write(reversecomplement(hsp.query)[i:i+80]+'\n')
@@ -133,6 +134,7 @@ def blast_nt_result(nom,inputdir, threshold):
                                         if reversecomplement(hsp.sbjct)[i] != reversecomplement(hsp.query)[i]:
                                             substitutions.append("{} remplace {} en position {}".format(reversecomplement(hsp.query)[i],reversecomplement(hsp.sbjct)[i], i))
                                 else:
+                                    dna_strand = "1"
                                     filout.write(">{}_{}_sequence".format(nom,gene)+'\n')
                                     for i in range(0,len(hsp.query),80):
                                         filout.write(hsp.query[i:i+80]+'\n')
@@ -149,13 +151,13 @@ def blast_nt_result(nom,inputdir, threshold):
                             if not substitutions:
                                 substitutions.append('-')
 
-                            resultats.append("{};{};{};{};{};{:.2f};{:.2f};{};{};{}\n"\
+                            resultats.append("{};{};{};{};{};{:.2f};{:.2f};{};{};{};{}\n"\
                             .format(souche,gene, contig,subject_longueur, \
                             alignement_longueur, perc_coverage, perc_ident,\
-                            "_".join(remarque),nb_substitutions,",".join(substitutions)))
+                            dna_strand,"_".join(remarque),nb_substitutions,",".join(substitutions)))
 
-    resultats.append("le nombre de genes trouves est de {};{};{};{};{};{};{};{};{};{}\n".\
-    format(compteur, "-", "-", "-", "-", "-", "-", "-", "-", "-"))
+    resultats.append("le nombre de genes trouves est de {};{};{};{};{};{};{};{};{};{};{}\n".\
+    format(compteur, "-", "-", "-", "-", "-", "-", "-", "-", "-", "-"))
     resultats = "".join(resultats)
 
     return resultats
@@ -183,7 +185,7 @@ def blast_nt_result_filout(liste, fasta_dir, outputdir, fasta_extension, databas
     print("Voici la liste des fichiers sur lesquels vous allez travailler", travail)
     print("Le nombre de fichier est de : {}".format(len(travail)))
     sortie = ["souche;gene;contig;longeur de la cible;longeur du gene;pourcentage\
-     de coverage;pourcentage d'identite;remarques;nombre de substitutions nucleotidiques;substitutions nucleotidiques\n"]
+     de coverage;pourcentage d'identite;dna_strand;remarques;nombre de substitutions nucleotidiques;substitutions nucleotidiques\n"]
     for nom in travail:
         print("############################################################################")
         print("########################### Working on {} ###############################".format(nom))
