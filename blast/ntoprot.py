@@ -7,12 +7,17 @@ import subprocess
 import re
 from Bio.Blast.Applications import NcbiblastxCommandline
 from Bio.Blast.Applications import NcbiblastxCommandline
+from Bio.SeqRecord import SeqRecord
 from Bio.Blast import NCBIXML
 from argparse import ArgumentParser
 import glob
+from Bio.Seq import Seq
+from Bio.Alphabet import generic_dna
 
-
-
+def reversecomplement(seq):
+    # Make reverse complement strand
+    trans = str.maketrans("ATGC", "TACG")
+    return seq.translate(trans)[::-1]
 
 ##Function defintion
 def traduction(liste):
@@ -108,18 +113,47 @@ for nom in travail:
     for fichier in glob.glob("{}/*.fasta".format(inputdir)):
         ## Variables definition:
         gene = (fichier.split("/")[-1]).split("_")[0]
-        print(gene)
         prot_fasta = "{}/{}_{}_protein_sequence.fasta".\
         format(output_dir_prot,gene,nom)
+        sequence_nt = []
+        sequence = []
 
         ## regex definition
         regex = re.compile("^>{}_{}_".format(nom,gene))
+        regex_reverse = re.compile("^>{}_{}_.*_reverse".format(nom,gene))
 
-        print(prot_fasta)
         with open(fichier,"r") as filin:
             for ligne in filin:
-                if regex.search(ligne):
-                    header = ">{}_{}_protein_sequence".format(nom,gene)
-                    print(header)
-                else:
-                    print(ligne)
+                sequence.append(ligne[:-1])
+
+        with open(prot_fasta, "w") as filout:
+            for header in sequence:
+                if regex_reverse.search(header):
+                    sequence_nt = sequence[1:]
+                    sequence_nt = "".join(sequence_nt)
+                    coding_dna = Seq(reversecomplement(sequence_nt), generic_dna)
+                    filout.write(">{}_{}_protein_sequence\n".format(gene,nom))
+                    #protein = coding_dna.translate(table=11, to_stop=True)
+                    #protein = str(protein)
+                    #for aa in range(0,len(protein),80):
+                        #filout.write(protein[aa:aa+80])
+                        #print(protein[aa:aa+80])
+
+                elif regex.search(header):
+                    sequence_nt = sequence[1:]
+                    sequence_nt = "".join(sequence_nt)
+                    coding_dna = Seq(sequence_nt, generic_dna)
+                    filout.write(">{}_{}_protein_sequence\n".format(gene,nom))
+                    #protein = coding_dna.translate(table=11, to_stop=True)
+                    #protein = str(protein)
+                    #for aa in range(0,len(protein),80):
+                        #filout.write(protein[aa:aa+80])
+                        #print(protein[aa:aa+80])
+
+        #print(coding_dna.translate(table=11, to_stop=True))
+        #sequence_nt = sequence_nt.lower()
+        #print((sequence_nt.find('atg')))
+        #sequence_prot = "".join(traduction(sequence_nt)).upper()
+        #print(sequence_prot)
+        #for aa in range(0,len(sequence_prot),80):
+            #print(sequence_prot[aa:aa+80])
