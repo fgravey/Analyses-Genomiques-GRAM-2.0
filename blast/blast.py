@@ -122,7 +122,7 @@ def blast_nt_result(nom,inputdir, threshold):
                                 ###looking for which DNA strand the gene is located
                                 if sbjct_start > sbjct_end:
                                     dna_strand = "-1"
-                                    filout.write(">{}_{}_sequence".format(nom,gene)+'\n')
+                                    filout.write(">{}_{}_sequence_reverse".format(nom,gene)+'\n')
                                     for i in range(0,len(hsp.query),80):
                                         filout.write(reversecomplement(hsp.query)[i:i+80]+'\n')
 
