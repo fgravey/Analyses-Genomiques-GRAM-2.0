@@ -59,32 +59,102 @@ def traduction(liste):
 
 	return prot
 
+def strain_trad(liste,blastdir):
 
-####################################################################################
-################################# Main #############################################
-####################################################################################
-# PARSE COMMAND LINE OPTIONS
-##########################################################################
-parser = ArgumentParser()
-parser.add_argument("-l", "--list", dest="list", \
-help="list which contains all the name of the strains", default='')
-parser.add_argument("-o", "--outputPath", dest="out_path",\
-help="Path to blast output", default='')
-parser.add_argument("-b", "--blast_dir", dest="blast_directory",\
-help="Path to the directory which contains all blastn results", default='')
-parser.add_argument("-e", "--extension", dest="extension",\
-help="fasta extension such as .fasta .fa .awked.fasta .agp.fasta", default='')
-parser.add_argument("-db", "--database", dest="database",\
-help="Indicate the name of the fasta file used to create the database", default='')
-parser.add_argument("-filename", "--filename", dest="filename",\
-help="summary output file name", default='summary_blast')
-parser.add_argument("-t", "--threshold", dest="threshold",\
-help="minimum percentage of coverage int", default='80')
-args = parser.parse_args()
+    travail = []
+    with open(liste, 'r') as filin:
+        for nom in filin:
+            travail.append(nom[:-1])
 
-###############################################################################
+    print("Voici la liste des fichiers sur lesquels vous allez travailler", travail)
+    print("Le nombre de fichier est de : {}".format(len(travail)))
+    print('\n')
+
+    for nom in travail:
+        ## Variables definitions
+        inputdir = "{}{}/{}_genes_sequences_fasta".format(blast_dir,nom, nom)
+        output_dir_prot = "{}{}/proteins_sequences".format(blast_dir,nom)
+
+        ## directory Creation
+        subprocess.run(["mkdir", output_dir_prot])
+
+        for fichier in glob.glob("{}/*.fasta".format(inputdir)):
+            ## Variables definition:
+            gene = (fichier.split("/")[-1]).split("_")[0]
+            prot_fasta = "{}/{}_{}_protein_sequence.fasta".\
+            format(output_dir_prot,gene,nom)
+            sequence_nt = []
+            sequence = []
+
+            ## Informations
+            print("########################################################")
+            print("################# Working on {}-{} ##########################".format(nom,gene))
+            print("########################################################")
+            print("\n")
+
+            ## regex definition
+            regex = re.compile("^>{}_{}_".format(nom,gene))
+            regex_reverse = re.compile("^>{}_{}_.*_reverse".format(nom,gene))
+            regex_gaps = re.compile("-")
+
+            with open(fichier,"r") as filin:
+                for ligne in filin:
+                    sequence.append(ligne[:-1])
+
+            with open(prot_fasta, "w") as filout:
+                for header in sequence:
+                    if regex_reverse.search(header):
+                        sequence_nt = sequence[1:]
+                        sequence_nt = "".join(sequence_nt)
+                        if "-" in sequence_nt:
+                            filout.write(">{}_{}_protein_sequence_ATTENTION_GAPS\n".format(gene,nom))
+                            sequence_nt = sequence_nt.replace("-", "")
+                        else:
+                            filout.write(">{}_{}_protein_sequence\n".format(gene,nom))
+
+                        coding_dna = Seq(reversecomplement(sequence_nt), generic_dna)
+                        protein = coding_dna.translate(table=11, to_stop=True)
+                        protein = str(protein)
+                        for aa in range(0,len(protein),80):
+                            filout.write(protein[aa:aa+80] + '\n')
+
+                    elif regex.search(header):
+                        sequence_nt = sequence[1:]
+                        sequence_nt = "".join(sequence_nt)
+
+                        if "-" in sequence_nt:
+                            filout.write(">{}_{}_protein_sequence_ATTENTION_GAPS\n".format(gene,nom))
+                            sequence_nt = sequence_nt.replace("-", "")
+                        else:
+                            filout.write(">{}_{}_protein_sequence\n".format(gene,nom))
+
+                        coding_dna = Seq(sequence_nt, generic_dna)
+                        protein = coding_dna.translate(table=11, to_stop=True)
+                        protein = str(protein)
+                        for aa in range(0,len(protein),80):
+                            filout.write(protein[aa:aa+80] + '\n')
 
 if __name__ == "__main__":
+
+    # PARSE COMMAND LINE OPTIONS
+    ##########################################################################
+    parser = ArgumentParser()
+    parser.add_argument("-l", "--list", dest="list", \
+    help="list which contains all the name of the strains", default='')
+    parser.add_argument("-o", "--outputPath", dest="out_path",\
+    help="Path to blast output", default='')
+    parser.add_argument("-b", "--blast_dir", dest="blast_directory",\
+    help="Path to the directory which contains all blastn results", default='')
+    parser.add_argument("-e", "--extension", dest="extension",\
+    help="fasta extension such as .fasta .fa .awked.fasta .agp.fasta", default='')
+    parser.add_argument("-db", "--database", dest="database",\
+    help="Indicate the name of the fasta file used to create the database", default='')
+    parser.add_argument("-filename", "--filename", dest="filename",\
+    help="summary output file name", default='summary_blast')
+    parser.add_argument("-t", "--threshold", dest="threshold",\
+    help="minimum percentage of coverage int", default='80')
+    args = parser.parse_args()
+
     # Variables difinition
     liste = args.list
     blast_dir = args.blast_directory
@@ -94,66 +164,4 @@ if __name__ == "__main__":
     database = args.database
     threshold = args.threshold
 
-#liste,blastdir
-travail = []
-with open(liste, 'r') as filin:
-    for nom in filin:
-        travail.append(nom[:-1])
-
-print("Voici la liste des fichiers sur lesquels vous allez travailler", travail)
-print("Le nombre de fichier est de : {}".format(len(travail)))
-for nom in travail:
-    ## Variables definitions
-    inputdir = "{}{}/{}_genes_sequences_fasta".format(blast_dir,nom, nom)
-    output_dir_prot = "{}{}/proteins_sequences".format(blast_dir,nom)
-
-    ## directory Creation
-    subprocess.run(["mkdir", output_dir_prot])
-
-    for fichier in glob.glob("{}/*.fasta".format(inputdir)):
-        ## Variables definition:
-        gene = (fichier.split("/")[-1]).split("_")[0]
-        prot_fasta = "{}/{}_{}_protein_sequence.fasta".\
-        format(output_dir_prot,gene,nom)
-        sequence_nt = []
-        sequence = []
-
-        ## regex definition
-        regex = re.compile("^>{}_{}_".format(nom,gene))
-        regex_reverse = re.compile("^>{}_{}_.*_reverse".format(nom,gene))
-
-        with open(fichier,"r") as filin:
-            for ligne in filin:
-                sequence.append(ligne[:-1])
-
-        with open(prot_fasta, "w") as filout:
-            for header in sequence:
-                if regex_reverse.search(header):
-                    sequence_nt = sequence[1:]
-                    sequence_nt = "".join(sequence_nt)
-                    coding_dna = Seq(reversecomplement(sequence_nt), generic_dna)
-                    filout.write(">{}_{}_protein_sequence\n".format(gene,nom))
-                    #protein = coding_dna.translate(table=11, to_stop=True)
-                    #protein = str(protein)
-                    #for aa in range(0,len(protein),80):
-                        #filout.write(protein[aa:aa+80])
-                        #print(protein[aa:aa+80])
-
-                elif regex.search(header):
-                    sequence_nt = sequence[1:]
-                    sequence_nt = "".join(sequence_nt)
-                    coding_dna = Seq(sequence_nt, generic_dna)
-                    filout.write(">{}_{}_protein_sequence\n".format(gene,nom))
-                    #protein = coding_dna.translate(table=11, to_stop=True)
-                    #protein = str(protein)
-                    #for aa in range(0,len(protein),80):
-                        #filout.write(protein[aa:aa+80])
-                        #print(protein[aa:aa+80])
-
-        #print(coding_dna.translate(table=11, to_stop=True))
-        #sequence_nt = sequence_nt.lower()
-        #print((sequence_nt.find('atg')))
-        #sequence_prot = "".join(traduction(sequence_nt)).upper()
-        #print(sequence_prot)
-        #for aa in range(0,len(sequence_prot),80):
-            #print(sequence_prot[aa:aa+80])
+    strain_trad(liste,blast_dir)
