@@ -92,9 +92,16 @@ def strain_trad(liste,blastdir):
             print("########################################################")
             print("\n")
 
-            ## regex definition
-            regex = re.compile("^>{}_{}_".format(nom,gene))
-            regex_reverse = re.compile("^>{}_{}_.*_reverse".format(nom,gene))
+            ### Dictionary defintion
+            trad = {"acrA" : "reverse", "acrB" : "reverse", "acrR" : "strand", \
+            "ampC" : "reverse", "ampC2" : "strand", "ampD" : "strain",\
+            "ampE" : "strand", "ampG" : "reverse", "ampH" : "reverse",\
+            "ampR" : "strand", "dacA" : "strand", "dacB" : "strand",\
+            "dacC" : "strand", "dacD" : "reverse", "fosA2" : "strand", \
+            "lysR" : "reverse", "nagZ" : "strand", "ompC=ompK36" : "reverse",\
+            "ompK35=ompF" : "reverse", "ompR" : "strand"}
+
+            ## Regex definition
             regex_gaps = re.compile("-")
 
             with open(fichier,"r") as filin:
@@ -103,7 +110,7 @@ def strain_trad(liste,blastdir):
 
             with open(prot_fasta, "w") as filout:
                 for header in sequence:
-                    if regex_reverse.search(header):
+                    if trad[gene] == "reverse":
                         sequence_nt = sequence[1:]
                         sequence_nt = "".join(sequence_nt)
                         if "-" in sequence_nt:
@@ -118,7 +125,7 @@ def strain_trad(liste,blastdir):
                         for aa in range(0,len(protein),80):
                             filout.write(protein[aa:aa+80] + '\n')
 
-                    elif regex.search(header):
+                    elif trad[gene] == "strand":
                         sequence_nt = sequence[1:]
                         sequence_nt = "".join(sequence_nt)
 
@@ -134,6 +141,62 @@ def strain_trad(liste,blastdir):
                         for aa in range(0,len(protein),80):
                             filout.write(protein[aa:aa+80] + '\n')
 
+def blastp(query, inputdir, subject, outputdir):
+    """Make a directory specific to each strain which contains two blast files
+    first one is a .txt file and the second one is an .xml file.
+    The xml file will be parse by bipython
+    Inputs : nom = name of the strain
+             outputdir = directory which will contains all the subdirectories
+
+    Outputs : a specific output by strain which contains the two fasta files
+    """
+    #Variable definition
+    nom = query.replace("{}/".format(inputdir), "").split("_")[1]
+    gene = query.replace("{}/".format(inputdir), "").split("_")[0]
+
+    subprocess.run(["blastp", "-query", "{}".format(query), "-subject", \
+    "{}".format(subject), "-out", "{}/{}_{}_blastp_xml.txt".format(outputdir,\
+    nom, gene),'-outfmt', '5'])
+    subprocess.run(["blastp", "-query", "{}".format(query), "-subject", \
+    "{}".format(subject), "-out", "{}/{}_{}blastp.txt".format(outputdir,nom,gene)])
+
+def blastp_souche(nom, inputdir, db):
+    """ function which blastp all the proteins created against the reference proteins
+    using the blastp function
+        Input : nom = name of the strains
+                inputdir = path to the general blast project
+                db = path to the directory which contains all the reference proteins
+
+        Outputs : two blastp results file one in xml format and the second one
+        in .txt format. All the files are located in the nom_blast_protein"""
+
+    ## Variables definition and directory creation
+    outputdir = "{}/{}/{}_blast_protein".format(inputdir,nom,nom)
+    subprocess.run(["mkdir", outputdir])
+    inputdir = "{}/{}/proteins_sequences".format(inputdir,nom)
+
+    ## Looking for all the fasta files present in the protein directory
+    for subject in glob.glob("{}/*.fasta".format(inputdir)):
+        paths = [] ## list which will contain the path of the query and the path of the subject
+
+        regex = re.compile("{}_".format(subject.replace("{}/".format(inputdir), "").split("_")[0]))
+        ## regex is the name of the gene which will be looked for in the protein directory and
+        ## to the db directory
+        if regex.search(subject):
+            print(subject)
+            paths.append(subject) ## adding the query absolute path paths[0]
+
+        for query in glob.glob("{}/*.fasta".format(db)):
+            if regex.search(query):
+                print(query)
+                paths.append(query) ## adding the subject absolute directory paths[1]
+
+        print(paths)
+        print(len(paths))
+
+        if len(paths) == 2: ## check if the path contain two paths
+            blastp(paths[0], inputdir, paths[1], outputdir)
+
 if __name__ == "__main__":
 
     # PARSE COMMAND LINE OPTIONS
@@ -148,7 +211,7 @@ if __name__ == "__main__":
     parser.add_argument("-e", "--extension", dest="extension",\
     help="fasta extension such as .fasta .fa .awked.fasta .agp.fasta", default='')
     parser.add_argument("-db", "--database", dest="database",\
-    help="Indicate the name of the fasta file used to create the database", default='')
+    help="Indicate directory which contains all the fasta files as subject", default='')
     parser.add_argument("-filename", "--filename", dest="filename",\
     help="summary output file name", default='summary_blast')
     parser.add_argument("-t", "--threshold", dest="threshold",\
@@ -165,3 +228,76 @@ if __name__ == "__main__":
     threshold = args.threshold
 
     strain_trad(liste,blast_dir)
+    #blastp_souche("FAY1", blast_dir, database)
+    #liste,blastdir,database
+
+    ##Vairables definitions
+    multifasta_prot_dir = "{}/multifasta_prot".format(blast_dir)
+
+    ### Directory Creation
+    subprocess.run(["mkdir", multifasta_prot_dir])
+
+    ## listing all the strains of the project
+    travail = []
+    with open(liste, 'r') as filin:
+        for nom in filin:
+            travail.append(nom[:-1])
+
+    print("Voici la liste des fichiers sur lesquels vous allez travailler", travail)
+    print("Le nombre de fichier est de : {}".format(len(travail)))
+    print('\n')
+
+    #### Adding all the genes find by blastn into a genes_list
+    genes_list = []
+    for nom in travail :
+        inputdir = "{}/{}/proteins_sequences".format(blast_dir,nom)
+        for subject in glob.glob("{}/*.fasta".format(inputdir)):
+            genes = (subject.split("/")[-1]).split("_")[0]
+            if genes in genes_list:
+                continue
+            else :
+                genes_list.append(genes)
+
+    ### parsing the files in order to extract the proteins sequences
+    for g in genes_list:
+        ### Regex definition:
+        regex = re.compile("{}_".format(g))
+
+
+        ## Variable definition
+        ref_seq = [] # list which will contain the header and the sequence of the reference protein
+        for query in glob.glob("{}/*.fasta".format(database)):
+            if regex.search(query):
+                print(query)
+                with open(query, 'r') as filin:
+                    for ligne in filin:
+                        ref_seq.append(ligne[:-1])
+
+        ## Writing the reference sequence into the multifasta file
+        with open("{}/{}_multifasta_protein.fasta".format(multifasta_prot_dir,g),'w')\
+        as filout:
+            filout.write(ref_seq[0]+ "_reference_sequence" + '\n')
+            ref_seq = "".join(ref_seq[1:])
+            for i in range(0,len(ref_seq),80):
+                filout.write(ref_seq[i:i+80]+'\n')
+
+        with open("{}/{}_multifasta_protein.fasta".format(multifasta_prot_dir,g),'a')\
+        as filout:
+            for nom in travail:
+                ## Regex definition
+                regex_2 = re.compile("{}_{}".format(g,nom))
+                ## Variable definition
+                inputdir = "{}/{}/proteins_sequences".format(blast_dir,nom)
+                ## For each strain looking for the protein sequence
+                for subject in glob.glob("{}/*.fasta".format(inputdir)):
+                    if regex_2.search(subject):
+                        print(subject)
+                        with open(subject,'r') as filin:
+                            for ligne in filin:
+                                filout.write(ligne)
+
+
+
+
+    # for query in glob.glob("{}/*.fasta".format(database)):
+        # gene = (query.split("/")[-1]).split("_")[0]
