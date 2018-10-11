@@ -101,7 +101,8 @@ def strain_trad(liste,blastdir):
             "lysR" : "reverse", "nagZ" : "strand", "ompC=ompK36" : "reverse",\
             "ompK35=ompF" : "reverse", "ompR" : "strand"}
 
-            ## Regex definition
+            ## regex definition
+            regex = re.compile("^>{}_{}_".format(nom,gene))
             regex_gaps = re.compile("-")
 
             with open(fichier,"r") as filin:
@@ -110,7 +111,7 @@ def strain_trad(liste,blastdir):
 
             with open(prot_fasta, "w") as filout:
                 for header in sequence:
-                    if trad[gene] == "reverse":
+                    if regex.search(header) and trad[gene] == "reverse":
                         sequence_nt = sequence[1:]
                         sequence_nt = "".join(sequence_nt)
                         if "-" in sequence_nt:
@@ -125,7 +126,7 @@ def strain_trad(liste,blastdir):
                         for aa in range(0,len(protein),80):
                             filout.write(protein[aa:aa+80] + '\n')
 
-                    elif trad[gene] == "strand":
+                    elif regex.search(header) and trad[gene] == "strand":
                         sequence_nt = sequence[1:]
                         sequence_nt = "".join(sequence_nt)
 
