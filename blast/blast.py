@@ -118,7 +118,7 @@ def blast_nt_result(nom,inputdir, threshold):
                             if not remarque :
                                 remarque.append("-")
 
-                            with open("{}/{}_{}_{}_nt_sequence.fasta".format(multifasta_nt_sequence_dir,gene,nom,contig), "w") as filout:
+                            with open("{}/{}_{}_{}_nt_sequence.fasta".format(multifasta_nt_sequence_dir,gene,nom,remarque[0].split(" ")[0]), "w") as filout:
                                 ###looking for which DNA strand the gene is located
                                 if sbjct_start > sbjct_end:
                                     dna_strand = "-1"
