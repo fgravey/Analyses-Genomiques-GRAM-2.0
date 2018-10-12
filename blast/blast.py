@@ -156,8 +156,8 @@ def blast_nt_result(nom,inputdir, threshold):
                             alignement_longueur, perc_coverage, perc_ident,\
                             dna_strand,"_".join(remarque),nb_substitutions,",".join(substitutions)))
 
-    resultats.append("le nombre de genes trouves est de {};{};{};{};{};{};{};{};{};{};{}\n".\
-    format(compteur, "-", "-", "-", "-", "-", "-", "-", "-", "-", "-"))
+    resultats.append("{};le nombre de genes trouves est de {};{};{};{};{};{};{};{};{};{}\n".\
+    format(nom, compteur, "-", "-", "-", "-", "-", "-", "-", "-", "-"))
     resultats = "".join(resultats)
 
     return resultats
@@ -299,9 +299,9 @@ if __name__ == "__main__":
     database = args.database
     threshold = args.threshold
 
-    #with open("{}{}.csv".format(outputdir,nom_fichier), 'w') as filout:
-        #for results in blast_nt_result_filout(liste, fasta_dir, outputdir,\
-         #fasta_extension, database, threshold):
-            #filout.write(results)
+    with open("{}{}.csv".format(outputdir,nom_fichier), 'w') as filout:
+        for results in blast_nt_result_filout(liste, fasta_dir, outputdir,\
+         fasta_extension, database, threshold):
+            filout.write(results)
 
     multifasta_nt(liste,outputdir,database)
