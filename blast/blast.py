@@ -218,12 +218,19 @@ def multifasta_nt(liste, outputdir, database):
 
     multifasta_gene_output = "{}/multifasta_nt".format(input) ## Creation of a directory
     subprocess.run(["mkdir", multifasta_gene_output])
-
+    print(genes)
     for g in genes:
+
+        #Informations
+        print("########################################################")
+        print("################# Working on {} multifasta ##########################".format(g))
+        print("########################################################")
+        print("\n")
+
         # regex definition
         regex = re.compile("{}_".format(g)) #Name of the genes
         regex_2 = re.compile("^>") #Looking for header in fasta file
-        regex_3 = re.compile("^>{}_".format(g))
+        regex_3 = re.compile("^>{}[_|-]".format(g))
 
         with open("{}/{}_multifasta.fasta".format(multifasta_gene_output, g), "w") as filout:
             with open("{}".format(database), "r") as filin:
@@ -292,9 +299,9 @@ if __name__ == "__main__":
     database = args.database
     threshold = args.threshold
 
-    with open("{}{}.csv".format(outputdir,nom_fichier), 'w') as filout:
-        for results in blast_nt_result_filout(liste, fasta_dir, outputdir,\
-         fasta_extension, database, threshold):
-            filout.write(results)
+    #with open("{}{}.csv".format(outputdir,nom_fichier), 'w') as filout:
+        #for results in blast_nt_result_filout(liste, fasta_dir, outputdir,\
+         #fasta_extension, database, threshold):
+            #filout.write(results)
 
     multifasta_nt(liste,outputdir,database)
