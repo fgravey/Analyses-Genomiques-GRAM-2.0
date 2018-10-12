@@ -99,7 +99,11 @@ def strain_trad(liste,blastdir):
             "ampR" : "strand", "dacA" : "strand", "dacB" : "strand",\
             "dacC" : "strand", "dacD" : "reverse", "fosA2" : "strand", \
             "lysR" : "reverse", "nagZ" : "strand", "ompC=ompK36" : "reverse",\
-            "ompK35=ompF" : "reverse", "ompR" : "strand"}
+            "ompK35=ompF" : "reverse", "ompR" : "strand", "arnA" : "strand",\
+            "arnB" : "strand", "arnC" : "strand", "arnd" : "strand",\
+            "arnE" : "strand", "arnF" : "strand", "arnT" : "strand",\
+            "phoP" : "reverse", "phoQ" : "reverse", "pmrA" : "reverse",\
+            "pmrB" : "reverse", "pmrD" : "reverse"}
 
             ## regex definition
             regex = re.compile("^>{}_{}_".format(nom,gene))
