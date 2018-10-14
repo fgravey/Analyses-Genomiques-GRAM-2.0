@@ -125,9 +125,9 @@ def results_resfinder(outdir,nom):
 
     # for each fasta in the list "travail" and for each antibiotic in the list
     # we launch the resfinder program
-        fasta = "{}/{}.{}".format(fasta_dir, nom, fasta_extension)
+        fasta = "{}/{}{}".format(fasta_dir, nom, fasta_extension)
         print("##################################################")
-        print("working on {}.{} file {}".format(nom, fasta_extension, atb))
+        print("working on {}{} file {}".format(nom, fasta_extension, atb))
         print("##################################################")
         subprocess.run(["perl", "{}".format(resfinder), "-d", "{}".format(database), \
         "-i", "{}".format(fasta), "-o", "{}".format(outputdir), "-k", "95.00", "-l",\
@@ -211,12 +211,12 @@ def results_resfinder(outdir,nom):
 
 
 ##### changing path
-liste = '/Volumes/Maxtor/Back_up_pasteur/kp_caen_2018/kp_caen_2018.txt'
+liste = '/Volumes/Maxtor/lugdunensis/liste_souches_lugdu.txt'
 #working list which contains all the name of the working files
-fasta_dir = '/Volumes/Maxtor/Back_up_pasteur/kp_caen_2018/fasta/agp_fasta'
+fasta_dir = '/Volumes/Maxtor/lugdunensis/fasta_assembled'
 #directory which contains the fasta
-outdir = '/Volumes/Maxtor/Back_up_pasteur/kp_caen_2018/analyses/resistome' #path to output files
-fasta_extension = 'agp.fasta'
+outdir = '/Volumes/Maxtor/lugdunensis/analyses/resistome' #path to output files
+fasta_extension = '.scfd.fasta'
 
 #listing all the files which will be working on
 travail = []
