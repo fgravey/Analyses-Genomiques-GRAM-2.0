@@ -54,7 +54,7 @@ def blast_nt_result(nom,inputdir, threshold):
                  name = name of the strain
 
         Outputs : resultats = list which contains all the extracted informations
-        separated by a ;
+        separated by a ; in order to create a .csv file
         """
     ## Variables definition
     inputdir = "{}{}".format(inputdir,nom)
@@ -76,6 +76,7 @@ def blast_nt_result(nom,inputdir, threshold):
                         ## General information
                         souche = nom
                         contig = blast_record.query
+                        print(alignment.title.split(" ")[1].split("-")[0])
                         gene = alignment.title.split(" ")[1].split("-")[0]
 
                         ## query information
@@ -214,7 +215,8 @@ def multifasta_nt(liste, outputdir, database):
 
     genes = [] #empty list which will contain all the genes name find by blast whit the first strain
     for fichier in glob.glob("{}/{}/{}_genes_sequences_fasta/*.fasta".format(input, travail[0],travail[0])):
-        genes.append((fichier.split("/")[-1]).split("_")[0])
+        if fichier.find('tronquee') == -1: #not working on tronquee proteins
+            genes.append((fichier.split("/")[-1]).split("_")[0])
 
     multifasta_gene_output = "{}/multifasta_nt".format(input) ## Creation of a directory
     subprocess.run(["mkdir", multifasta_gene_output])
@@ -254,15 +256,16 @@ def multifasta_nt(liste, outputdir, database):
         with open("{}/{}_multifasta.fasta".format(multifasta_gene_output, g), "a") as filout:
             for nom in travail:
                 for fichier in glob.glob("{}/{}/{}_genes_sequences_fasta/*.fasta".format(input, nom,nom)):
-                    if regex.search(fichier):
-                        with open("{}".format(fichier), "r") as filin:
-                            ligne = filin.readline()
-                            if regex_2.search(ligne):
-                                filout.write(ligne)
+                    if fichier.find('tronquee') == -1:#not working on tronquee proteins
+                        if regex.search(fichier):
+                            with open("{}".format(fichier), "r") as filin:
                                 ligne = filin.readline()
-                                while regex_2.search(ligne) == None and ligne != '':
+                                if regex_2.search(ligne):
                                     filout.write(ligne)
                                     ligne = filin.readline()
+                                    while regex_2.search(ligne) == None and ligne != '':
+                                        filout.write(ligne)
+                                        ligne = filin.readline()
 
 
 ####################################################################################
