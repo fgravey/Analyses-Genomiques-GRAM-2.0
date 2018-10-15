@@ -76,8 +76,8 @@ def blast_nt_result(nom,inputdir, threshold):
                         ## General information
                         souche = nom
                         contig = blast_record.query
-                        print(alignment.title.split(" ")[1].split("-")[0])
-                        gene = alignment.title.split(" ")[1].split("-")[0]
+                        gene = (alignment.title.split(" ")[1].split("-")[0])\
+                        .split("_")[0]
 
                         ## query information
                         query_start = hsp.query_start
