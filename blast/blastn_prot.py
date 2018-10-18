@@ -148,40 +148,6 @@ def blastp_souche(nom, inputdir, db):
 #db = "/Users/Francois/blast_data_base/ecloacae/proteines_cluster_6"
 #blastp_souche(nom, inputdir, db)
 
-for fichier in glob.glob("{}/*_xml.txt".format("/Users/Francois/Desktop/essai_blast/FAY1/FAY1_blast_protein")):
-    with open(fichier, "r") as result_handle:
-        blast_records = NCBIXML.parse(result_handle)
-        E_VALUE_THRESH = 0.04
-        for blast_record in blast_records:
-            if blast_record.alignments:
-                for alignment in blast_record.alignments:
-                    for hsp in alignment.hsps:
-                        ## Variables definition
-                        #souche = nom
-                        contig = blast_record.query
-                        gene = alignment.title.split(" ")[1].split("-")[0]
-                        diff = int(alignment.length)-(int(hsp.identities)+int(hsp.gaps))
-                        longueur = alignment.length
-                        proba = hsp.expect
-                        id = hsp.identities
-                        positive = hsp.positives
-                        gaps = hsp.gaps
-                        sequence = hsp.query
-                        match = hsp.match
-                        subject = hsp.sbjct
-                        print(contig)
-                        print(gene)
-                        #print(diff)
-                        #print(sequence)
-                        #print(subject)
-                        print(match)
-                        #for i in range(0,len(subject)):
-                            #if sequence[i] != subject[i]:
-                                #print("{} remplace {} en position {}".format(sequence[i], subject[i], i))
-            else:
-                contig = blast_record.query
-                print("{} no match !!".format(contig))
-
 
 
 
