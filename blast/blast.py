@@ -76,8 +76,9 @@ def blast_nt_result(nom,inputdir, threshold):
                         ## General information
                         souche = nom
                         contig = blast_record.query
-                        gene = (alignment.title.split(" ")[1].split("-")[0])\
-                        .split("_")[0]
+                        print(alignment.title)
+                        gene = (alignment.title.split(" ")[1].split("-")[0])
+                        print(gene)
 
                         ## query information
                         query_start = hsp.query_start
@@ -217,7 +218,7 @@ def multifasta_nt(liste, outputdir, database):
     for nom in travail :
         for fichier in glob.glob("{}/{}/{}_genes_sequences_fasta/*.fasta".format(input, nom,nom)):
             if fichier.find('tronquee') == -1: #not working on tronquee proteins
-                g = (fichier.split("/")[-1]).split("_")[0]
+                g = (fichier.split("/")[-1]).replace('_{}_-_nt_sequence.fasta'.format(nom),'')
                 if g in genes:
                     continue
                 else :
