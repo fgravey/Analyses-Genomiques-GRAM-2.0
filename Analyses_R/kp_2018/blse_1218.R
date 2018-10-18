@@ -28,12 +28,12 @@ return(out)
 #### Mooving to the working directory
 setwd("/Volumes/Maxtor/Back_up_pasteur/kp_caen_2018/Data/epi/")
 
-
-##############################################################################################################
-################################ Working on demande per year #################################################
-##############################################################################################################
 ## Reading the csv file and cleaning data
 blse1218 = read.csv("blse_caen_1218.csv",header = TRUE, stringsAsFactors = FALSE, sep = ";")
+
+##############################################################################################################
+################################ Working on kpn #################################################
+##############################################################################################################
 kp1218 = blse1218[blse1218$Germe == "Klebsiella pneumoniae pneumoniae",]
 
 kp1218 = kp1218[kp1218$Correspondant != "CH JACQUES MONOD" &
@@ -77,6 +77,50 @@ kpblse1218 = do.call(rbind,x.list)
 nb.kpblse.1218 = compteur(kpblse1218,2012,2018)
 colnames(nb.kpblse.1218) = c("Dates", "Nombres.kpblse")
 sum(nb.kpblse.1218$Nombres.kpblse)
+
+##############################################################################################################
+################################ Working on kpn #################################################
+##############################################################################################################
+ecol = blse1218[blse1218$Germe == "Escherichia coli",]
+ecol = ecol[grepl("^[0-9]+$", ecol$Correspondant),]
+
+ecol$Date.prelevement = gsub("/", "", ecol$Date.prelevement)
+ecol$Date.prelevement = dmy(ecol$Date.prelevement)
+
+## Keeping non doublon patient per year
+
+ecol12 = ecol[year(ecol$Date.prelevement) == 2012,]
+ecol12 = ecol12[!duplicated(ecol12$Patient),]
+
+ecol13 = ecol[year(ecol$Date.prelevement) == 2013,]
+ecol13 = ecol13[!duplicated(ecol13$Patient),]
+
+ecol14 = ecol[year(ecol$Date.prelevement) == 2014,]
+ecol14 = ecol14[!duplicated(ecol14$Patient),]
+
+ecol15 = ecol[year(ecol$Date.prelevement) == 2015,]
+ecol15 = ecol15[!duplicated(ecol15$Patient),]
+
+ecol16 = ecol[year(ecol$Date.prelevement) == 2016,]
+ecol16 = ecol16[!duplicated(ecol16$Patient),]
+
+ecol17 = ecol[year(ecol$Date.prelevement) == 2017,]
+ecol17 = ecol17[!duplicated(ecol17$Patient),]
+
+ecol18 = ecol[year(ecol$Date.prelevement) == 2018,]
+ecol18 = ecol18[!duplicated(ecol18$Patient),]
+
+
+### rbind all the data frames
+x.n = c("ecol12","ecol13", "ecol14", "ecol15", "ecol16", "ecol17", "ecol18")
+x.list = lapply(x.n, get)
+ecolblse1218 = do.call(rbind,x.list)
+
+################################# Compte du nombre de ecolblse par mois grâce à la fonction compteur ########
+nb.ecolblse.1218 = compteur(ecolblse1218,2012,2018)
+colnames(nb.ecolblse.1218) = c("Dates", "Nombres.ecolblse")
+sum(nb.ecolblse.1218$Nombres.ecolblse)
+
 
 ##############################################################################################################
 ################################ Working on demande per year #################################################
@@ -125,12 +169,25 @@ colnames(nb.demandes.1218) = c("Dates", "Nombres.demandes")
 ##############################################################################################################
 
 resume = merge(nb.demandes.1218, nb.kpblse.1218, by.x = "Dates", by.y = "Dates")
-resume$taux = round(resume$Nombres.kpblse/resume$Nombres.demandes, digits = 2)
-sum(resume$taux > 1)
+resume$tauxkpn = round(resume$Nombres.kpblse/resume$Nombres.demandes, digits = 2)
+resume = merge(resume, nb.ecolblse.1218, by.x = "Dates", by.y = "Dates")
+resume$tauxecol = round(resume$Nombres.ecolblse/resume$Nombres.demandes, digits = 2)
+resume[is.na(resume)] = 0
 
-ggplot(data=kpblse ,aes(x=date,y = nb)) +
-  geom_line(color = "cadetblue1")+
-  scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y")+
+plot(resume$Dates,resume$Nombres.demandes, type = "l")
+
+ggplot(data=resume) +
+  #geom_line(aes(x=Dates, y = Nombres.kpblse, color = "kpblse"))+
+  geom_line(aes(x=Dates, y = tauxkpn, color = "taux kpn"))+
+  geom_line(aes(x=Dates, y = tauxecol, color = "taux ecol"))+
+  scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y", limits = c(min(resume$Dates), max(resume$Dates)))+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1), legend.position = "top")
+
+ggplot(data=resume) +
+  geom_line(aes(x=Dates, y = Nombres.kpblse, color = "blse"))+
+  geom_line(aes(x=Dates, y = Nombres.ecolblse, color = "ecol"))+
+  scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y", limits = c(min(resume$Dates), max(resume$Dates)))+
   theme_classic()+
   theme(axis.text.x = element_text(angle = 90, hjust = 1), legend.position = "top")
 
