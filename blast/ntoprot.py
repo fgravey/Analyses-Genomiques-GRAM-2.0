@@ -13,6 +13,7 @@ from argparse import ArgumentParser
 import glob
 from Bio.Seq import Seq
 from Bio.Alphabet import generic_dna
+import sens_traduction as sens
 
 def reversecomplement(seq):
     # Make reverse complement strand
@@ -20,6 +21,12 @@ def reversecomplement(seq):
     return seq.translate(trans)[::-1]
 
 def strain_trad(liste,blastdir):
+    """ DNA Traduction in protein using the Biopython library
+        Inputs : list which contains all the stains you wanted working on
+                 absolute path to the directory of blast
+        Outputs: fasta file containing the protein sequence namde as
+                 gene_nameofthestrain_protein_sequence.fasta in a dedicated
+                 directory named proteins_sequences"""
 
     travail = []
     with open(liste, 'r') as filin:
@@ -53,19 +60,6 @@ def strain_trad(liste,blastdir):
                 print("########################################################")
                 print("\n")
 
-                ### Dictionary defintion
-                trad = {"acrA" : "reverse", "acrB" : "reverse", "acrR" : "strand", \
-                "ampC" : "reverse", "ampC2" : "strand", "ampD" : "strain",\
-                "ampE" : "strand", "ampG" : "reverse", "ampH" : "reverse",\
-                "ampR" : "strand", "dacA" : "strand", "dacB" : "strand",\
-                "dacC" : "strand", "dacD" : "reverse", "fosA2" : "strand", \
-                "lysR" : "reverse", "nagZ" : "strand", "ompC=ompK36" : "reverse",\
-                "ompK35=ompF" : "reverse", "ompR" : "strand", "arnA" : "strand",\
-                "arnB" : "strand", "arnC" : "strand", "arnd" : "strand",\
-                "arnE" : "strand", "arnF" : "strand", "arnT" : "strand",\
-                "phoP" : "reverse", "phoQ" : "reverse", "pmrA" : "reverse",\
-                "pmrB" : "reverse", "pmrD" : "reverse"}
-
                 ## regex definition
                 regex = re.compile("^>{}_{}_".format(nom,gene))
                 regex_gaps = re.compile("-")
@@ -76,7 +70,7 @@ def strain_trad(liste,blastdir):
 
                 with open(prot_fasta, "w") as filout:
                     for header in sequence:
-                        if regex.search(header) and trad[gene] == "reverse":
+                        if regex.search(header) and sens.trad[gene] == "reverse":
                             sequence_nt = sequence[1:]
                             sequence_nt = "".join(sequence_nt)
                             if "-" in sequence_nt:
@@ -91,7 +85,7 @@ def strain_trad(liste,blastdir):
                             for aa in range(0,len(protein),80):
                                 filout.write(protein[aa:aa+80] + '\n')
 
-                        elif regex.search(header) and trad[gene] == "strand":
+                        elif regex.search(header) and sens.trad[gene] == "strand":
                             sequence_nt = sequence[1:]
                             sequence_nt = "".join(sequence_nt)
 
