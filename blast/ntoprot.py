@@ -39,72 +39,73 @@ def strain_trad(liste,blastdir):
         subprocess.run(["mkdir", output_dir_prot])
 
         for fichier in glob.glob("{}/*.fasta".format(inputdir)):
-            ## Variables definition:
-            gene = (fichier.split("/")[-1]).split("_")[0]
-            prot_fasta = "{}/{}_{}_protein_sequence.fasta".\
-            format(output_dir_prot,gene,nom)
-            sequence_nt = []
-            sequence = []
+            if fichier.find('tronquee') == -1: #not working on tronquee proteins
+                ## Variables definition:
+                gene = (fichier.split("/")[-1]).split("_")[0]
+                prot_fasta = "{}/{}_{}_protein_sequence.fasta".\
+                format(output_dir_prot,gene,nom)
+                sequence_nt = []
+                sequence = []
 
-            ## Informations
-            print("########################################################")
-            print("################# Traduction on {}-{} ##########################".format(nom,gene))
-            print("########################################################")
-            print("\n")
+                ## Informations
+                print("########################################################")
+                print("################# Traduction on {}-{} ##########################".format(nom,gene))
+                print("########################################################")
+                print("\n")
 
-            ### Dictionary defintion
-            trad = {"acrA" : "reverse", "acrB" : "reverse", "acrR" : "strand", \
-            "ampC" : "reverse", "ampC2" : "strand", "ampD" : "strain",\
-            "ampE" : "strand", "ampG" : "reverse", "ampH" : "reverse",\
-            "ampR" : "strand", "dacA" : "strand", "dacB" : "strand",\
-            "dacC" : "strand", "dacD" : "reverse", "fosA2" : "strand", \
-            "lysR" : "reverse", "nagZ" : "strand", "ompC=ompK36" : "reverse",\
-            "ompK35=ompF" : "reverse", "ompR" : "strand", "arnA" : "strand",\
-            "arnB" : "strand", "arnC" : "strand", "arnd" : "strand",\
-            "arnE" : "strand", "arnF" : "strand", "arnT" : "strand",\
-            "phoP" : "reverse", "phoQ" : "reverse", "pmrA" : "reverse",\
-            "pmrB" : "reverse", "pmrD" : "reverse"}
+                ### Dictionary defintion
+                trad = {"acrA" : "reverse", "acrB" : "reverse", "acrR" : "strand", \
+                "ampC" : "reverse", "ampC2" : "strand", "ampD" : "strain",\
+                "ampE" : "strand", "ampG" : "reverse", "ampH" : "reverse",\
+                "ampR" : "strand", "dacA" : "strand", "dacB" : "strand",\
+                "dacC" : "strand", "dacD" : "reverse", "fosA2" : "strand", \
+                "lysR" : "reverse", "nagZ" : "strand", "ompC=ompK36" : "reverse",\
+                "ompK35=ompF" : "reverse", "ompR" : "strand", "arnA" : "strand",\
+                "arnB" : "strand", "arnC" : "strand", "arnd" : "strand",\
+                "arnE" : "strand", "arnF" : "strand", "arnT" : "strand",\
+                "phoP" : "reverse", "phoQ" : "reverse", "pmrA" : "reverse",\
+                "pmrB" : "reverse", "pmrD" : "reverse"}
 
-            ## regex definition
-            regex = re.compile("^>{}_{}_".format(nom,gene))
-            regex_gaps = re.compile("-")
+                ## regex definition
+                regex = re.compile("^>{}_{}_".format(nom,gene))
+                regex_gaps = re.compile("-")
 
-            with open(fichier,"r") as filin:
-                for ligne in filin:
-                    sequence.append(ligne[:-1])
+                with open(fichier,"r") as filin:
+                    for ligne in filin:
+                        sequence.append(ligne[:-1])
 
-            with open(prot_fasta, "w") as filout:
-                for header in sequence:
-                    if regex.search(header) and trad[gene] == "reverse":
-                        sequence_nt = sequence[1:]
-                        sequence_nt = "".join(sequence_nt)
-                        if "-" in sequence_nt:
-                            filout.write(">{}_{}_protein_sequence_ATTENTION_GAPS\n".format(gene,nom))
-                            sequence_nt = sequence_nt.replace("-", "")
-                        else:
-                            filout.write(">{}_{}_protein_sequence\n".format(gene,nom))
+                with open(prot_fasta, "w") as filout:
+                    for header in sequence:
+                        if regex.search(header) and trad[gene] == "reverse":
+                            sequence_nt = sequence[1:]
+                            sequence_nt = "".join(sequence_nt)
+                            if "-" in sequence_nt:
+                                filout.write(">{}_{}_protein_sequence_ATTENTION_GAPS\n".format(gene,nom))
+                                sequence_nt = sequence_nt.replace("-", "")
+                            else:
+                                filout.write(">{}_{}_protein_sequence\n".format(gene,nom))
 
-                        coding_dna = Seq(reversecomplement(sequence_nt), generic_dna)
-                        protein = coding_dna.translate(table=11, to_stop=True)
-                        protein = str(protein)
-                        for aa in range(0,len(protein),80):
-                            filout.write(protein[aa:aa+80] + '\n')
+                            coding_dna = Seq(reversecomplement(sequence_nt), generic_dna)
+                            protein = coding_dna.translate(table=11, to_stop=True)
+                            protein = str(protein)
+                            for aa in range(0,len(protein),80):
+                                filout.write(protein[aa:aa+80] + '\n')
 
-                    elif regex.search(header) and trad[gene] == "strand":
-                        sequence_nt = sequence[1:]
-                        sequence_nt = "".join(sequence_nt)
+                        elif regex.search(header) and trad[gene] == "strand":
+                            sequence_nt = sequence[1:]
+                            sequence_nt = "".join(sequence_nt)
 
-                        if "-" in sequence_nt:
-                            filout.write(">{}_{}_protein_sequence_ATTENTION_GAPS\n".format(gene,nom))
-                            sequence_nt = sequence_nt.replace("-", "")
-                        else:
-                            filout.write(">{}_{}_protein_sequence\n".format(gene,nom))
+                            if "-" in sequence_nt:
+                                filout.write(">{}_{}_protein_sequence_ATTENTION_GAPS\n".format(gene,nom))
+                                sequence_nt = sequence_nt.replace("-", "")
+                            else:
+                                filout.write(">{}_{}_protein_sequence\n".format(gene,nom))
 
-                        coding_dna = Seq(sequence_nt, generic_dna)
-                        protein = coding_dna.translate(table=11, to_stop=True)
-                        protein = str(protein)
-                        for aa in range(0,len(protein),80):
-                            filout.write(protein[aa:aa+80] + '\n')
+                            coding_dna = Seq(sequence_nt, generic_dna)
+                            protein = coding_dna.translate(table=11, to_stop=True)
+                            protein = str(protein)
+                            for aa in range(0,len(protein),80):
+                                filout.write(protein[aa:aa+80] + '\n')
 
 def blastp(query, inputdir, subject, outputdir):
     """Make a directory specific to each strain which contains two blast files
