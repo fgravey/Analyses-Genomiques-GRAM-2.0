@@ -162,40 +162,7 @@ def blastp_souche(nom, inputdir, db):
         if len(paths) == 2: ## check if the path contain two paths
             blastp(paths[0], inputdir, paths[1], outputdir)
 
-if __name__ == "__main__":
-
-    # PARSE COMMAND LINE OPTIONS
-    ##########################################################################
-    parser = ArgumentParser()
-    parser.add_argument("-l", "--list", dest="list", \
-    help="list which contains all the name of the strains", default='')
-    parser.add_argument("-o", "--outputPath", dest="out_path",\
-    help="Path to blast output", default='')
-    parser.add_argument("-b", "--blast_dir", dest="blast_directory",\
-    help="Path to the directory which contains all blastn results", default='')
-    parser.add_argument("-e", "--extension", dest="extension",\
-    help="fasta extension such as .fasta .fa .awked.fasta .agp.fasta", default='')
-    parser.add_argument("-db", "--database", dest="database",\
-    help="Indicate directory which contains all the fasta files as subject", default='')
-    parser.add_argument("-filename", "--filename", dest="filename",\
-    help="summary output file name", default='summary_blast')
-    parser.add_argument("-t", "--threshold", dest="threshold",\
-    help="minimum percentage of coverage int", default='80')
-    args = parser.parse_args()
-
-    # Variables difinition
-    liste = args.list
-    blast_dir = args.blast_directory
-    outputdir = args.out_path
-    fasta_extension = args.extension
-    nom_fichier = args.filename
-    database = args.database
-    threshold = args.threshold
-
-    strain_trad(liste,blast_dir)
-    #blastp_souche("FAY1", blast_dir, database)
-    #liste,blastdir,database
-
+def multifasta_prot(liste,blast_dir,database):
     ##Vairables definitions
     multifasta_prot_dir = "{}/multifasta_prot".format(blast_dir)
 
@@ -264,5 +231,36 @@ if __name__ == "__main__":
 
 
 
-    # for query in glob.glob("{}/*.fasta".format(database)):
-        # gene = (query.split("/")[-1]).split("_")[0]
+if __name__ == "__main__":
+
+    # PARSE COMMAND LINE OPTIONS
+    ##########################################################################
+    parser = ArgumentParser()
+    parser.add_argument("-l", "--list", dest="list", \
+    help="list which contains all the name of the strains", default='')
+    parser.add_argument("-o", "--outputPath", dest="out_path",\
+    help="Path to blast output", default='')
+    parser.add_argument("-b", "--blast_dir", dest="blast_directory",\
+    help="Path to the directory which contains all blastn results", default='')
+    parser.add_argument("-e", "--extension", dest="extension",\
+    help="fasta extension such as .fasta .fa .awked.fasta .agp.fasta", default='')
+    parser.add_argument("-db", "--database", dest="database",\
+    help="Indicate directory which contains all the fasta files as subject", default='')
+    parser.add_argument("-filename", "--filename", dest="filename",\
+    help="summary output file name", default='summary_blast')
+    parser.add_argument("-t", "--threshold", dest="threshold",\
+    help="minimum percentage of coverage int", default='80')
+    args = parser.parse_args()
+
+    # Variables difinition
+    liste = args.list
+    blast_dir = args.blast_directory
+    outputdir = args.out_path
+    fasta_extension = args.extension
+    nom_fichier = args.filename
+    database = args.database
+    threshold = args.threshold
+
+    strain_trad(liste,blast_dir)
+    multifasta_prot(liste,blast_dir,database)
+    #blastp_souche("FAY1", blast_dir, database)
