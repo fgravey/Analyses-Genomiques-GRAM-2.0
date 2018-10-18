@@ -13,7 +13,7 @@ from argparse import ArgumentParser
 import glob
 from Bio.Seq import Seq
 from Bio.Alphabet import generic_dna
-import sens_traduction as sens
+import sens_traduction as way
 
 def reversecomplement(seq):
     # Make reverse complement strand
@@ -68,9 +68,12 @@ def strain_trad(liste,blastdir):
                     for ligne in filin:
                         sequence.append(ligne[:-1])
 
+                ### DNA Traduction regarding the way of the traduction of the gene
+                ### according to the sens_traduction module
+
                 with open(prot_fasta, "w") as filout:
                     for header in sequence:
-                        if regex.search(header) and sens.trad[gene] == "reverse":
+                        if regex.search(header) and way.trad[gene] == "reverse":
                             sequence_nt = sequence[1:]
                             sequence_nt = "".join(sequence_nt)
                             if "-" in sequence_nt:
@@ -85,7 +88,7 @@ def strain_trad(liste,blastdir):
                             for aa in range(0,len(protein),80):
                                 filout.write(protein[aa:aa+80] + '\n')
 
-                        elif regex.search(header) and sens.trad[gene] == "strand":
+                        elif regex.search(header) and way.trad[gene] == "strand":
                             sequence_nt = sequence[1:]
                             sequence_nt = "".join(sequence_nt)
 
@@ -120,6 +123,15 @@ def blastp(query, inputdir, subject, outputdir):
     subprocess.run(["blastp", "-query", "{}".format(query), "-subject", \
     "{}".format(subject), "-out", "{}/{}_{}blastp.txt".format(outputdir,nom,gene)])
 
+def blastp_all(liste,blast_dir,database):
+    travail = []
+    with open(liste, 'r') as filin:
+        for nom in filin:
+            travail.append(nom[:-1])
+
+    for nom in travail:
+        blastp_souche(nom,blast_dir,database)
+
 def blastp_souche(nom, inputdir, db):
     """ function which blastp all the proteins created against the reference proteins
     using the blastp function
@@ -137,27 +149,30 @@ def blastp_souche(nom, inputdir, db):
 
     ## Looking for all the fasta files present in the protein directory
     for subject in glob.glob("{}/*.fasta".format(inputdir)):
-        paths = [] ## list which will contain the path of the query and the path of the subject
+        if subject.find('tronquee') == -1: #not working on tronquee proteins
+            paths = [] ## list which will contain the path of the query and the path of the subject
 
-        regex = re.compile("{}_".format(subject.replace("{}/".format(inputdir), "").split("_")[0]))
-        ## regex is the name of the gene which will be looked for in the protein directory and
-        ## to the db directory
-        if regex.search(subject):
-            print(subject)
-            paths.append(subject) ## adding the query absolute path paths[0]
+            regex = re.compile("{}_".format(subject.replace("{}/".format(inputdir), "").split("_")[0]))
+            ## regex is the name of the gene which will be looked for in the protein directory and
+            ## to the db directory
+            if regex.search(subject):
+                paths.append(subject) ## adding the query absolute path paths[0]
 
-        for query in glob.glob("{}/*.fasta".format(db)):
-            if regex.search(query):
-                print(query)
-                paths.append(query) ## adding the subject absolute directory paths[1]
-
-        print(paths)
-        print(len(paths))
+            for query in glob.glob("{}/*.fasta".format(db)):
+                if regex.search(query):
+                    paths.append(query) ## adding the subject absolute directory paths[1]
 
         if len(paths) == 2: ## check if the path contain two paths
             blastp(paths[0], inputdir, paths[1], outputdir)
 
 def multifasta_prot(liste,blast_dir,database):
+    """ Creation of a multifasta which contains all the traducted proteins of
+    the genes find in the genomes
+        Inputs : list which contains all the stains you wanted working on
+                 absolute path to the directory of blast
+        Outpus : multifasta which contains all the traducted proteins of
+        the genes find in the genomes"""
+
     ##Vairables definitions
     multifasta_prot_dir = "{}/multifasta_prot".format(blast_dir)
 
@@ -170,9 +185,6 @@ def multifasta_prot(liste,blast_dir,database):
         for nom in filin:
             travail.append(nom[:-1])
 
-    print("Voici la liste des fichiers sur lesquels vous allez travailler", travail)
-    print("Le nombre de fichier est de : {}".format(len(travail)))
-    print('\n')
 
     #### Adding all the genes find by blastn into a genes_list
     genes_list = []
@@ -195,10 +207,16 @@ def multifasta_prot(liste,blast_dir,database):
         ref_seq = [] # list which will contain the header and the sequence of the reference protein
         for query in glob.glob("{}/*.fasta".format(database)):
             if regex.search(query):
-                print(query)
                 with open(query, 'r') as filin:
                     for ligne in filin:
                         ref_seq.append(ligne[:-1])
+
+
+        ## Informations
+        print("########################################################")
+        print("################# {} multifasta Creation ##########################".format(g))
+        print("########################################################")
+        print("\n")
 
         ## Writing the reference sequence into the multifasta file
         with open("{}/{}_multifasta_protein.fasta".format(multifasta_prot_dir,g),'w')\
@@ -217,11 +235,11 @@ def multifasta_prot(liste,blast_dir,database):
                 inputdir = "{}/{}/proteins_sequences".format(blast_dir,nom)
                 ## For each strain looking for the protein sequence
                 for subject in glob.glob("{}/*.fasta".format(inputdir)):
-                    if regex_2.search(subject):
-                        print(subject)
-                        with open(subject,'r') as filin:
-                            for ligne in filin:
-                                filout.write(ligne)
+                    if subject.find('tronquee') == -1: #not working on tronquee proteins
+                        if regex_2.search(subject):
+                            with open(subject,'r') as filin:
+                                for ligne in filin:
+                                    filout.write(ligne)
 
 
 
@@ -256,6 +274,7 @@ if __name__ == "__main__":
     database = args.database
     threshold = args.threshold
 
-    strain_trad(liste,blast_dir)
-    multifasta_prot(liste,blast_dir,database)
+    #strain_trad(liste,blast_dir)
+    #multifasta_prot(liste,blast_dir,database)
     #blastp_souche("FAY1", blast_dir, database)
+    blastp_all(liste,blast_dir, database)
