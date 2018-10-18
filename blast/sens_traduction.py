@@ -4,7 +4,7 @@
 
 ### Dictionary defintion
 trad = {"acrA" : "reverse", "acrB" : "reverse", "acrR" : "strand", \
-"ampC" : "reverse", "ampC2" : "strand", "ampD" : "strain",\
+"ampC" : "reverse", "ampC2" : "strand", "ampD" : "strand",\
 "ampE" : "strand", "ampG" : "reverse", "ampH" : "reverse",\
 "ampR" : "strand", "dacA" : "strand", "dacB" : "strand",\
 "dacC" : "strand", "dacD" : "reverse", "fosA2" : "strand", \
