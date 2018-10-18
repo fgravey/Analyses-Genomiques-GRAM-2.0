@@ -214,9 +214,14 @@ def multifasta_nt(liste, outputdir, database):
             travail.append(nom[:-1]) #adding to travail list all the strain names
 
     genes = [] #empty list which will contain all the genes name find by blast whit the first strain
-    for fichier in glob.glob("{}/{}/{}_genes_sequences_fasta/*.fasta".format(input, travail[0],travail[0])):
-        if fichier.find('tronquee') == -1: #not working on tronquee proteins
-            genes.append((fichier.split("/")[-1]).split("_")[0])
+    for nom in travail :
+        for fichier in glob.glob("{}/{}/{}_genes_sequences_fasta/*.fasta".format(input, nom,nom)):
+            if fichier.find('tronquee') == -1: #not working on tronquee proteins
+                g = (fichier.split("/")[-1]).split("_")[0]
+                if g in genes:
+                    continue
+                else :
+                    genes.append(g)
 
     multifasta_gene_output = "{}/multifasta_nt".format(input) ## Creation of a directory
     subprocess.run(["mkdir", multifasta_gene_output])
