@@ -21,6 +21,10 @@ def reversecomplement(seq):
     return seq.translate(trans)[::-1]
 
 def strain_trad(liste,blastdir):
+    print("########################################################")
+    print("################# Traduction Started ##########################")
+    print("########################################################")
+    print("\n")
     """ DNA Traduction in protein using the Biopython library
         Inputs : list which contains all the stains you wanted working on
                  absolute path to the directory of blast
@@ -55,10 +59,7 @@ def strain_trad(liste,blastdir):
                 sequence = []
 
                 ## Informations
-                print("########################################################")
-                print("################# Traduction on {}-{} ##########################".format(nom,gene))
-                print("########################################################")
-                print("\n")
+                print("----> {} {}".format(nom,gene))
 
                 ## regex definition
                 regex = re.compile("^>{}_{}_".format(nom,gene))
@@ -124,6 +125,12 @@ def blastp(query, inputdir, subject, outputdir):
     "{}".format(subject), "-out", "{}/{}_{}blastp.txt".format(outputdir,nom,gene)])
 
 def blastp_all(liste,blast_dir,database):
+    #Informations
+    print("########################################################")
+    print("################# Blast Started ##########################")
+    print("########################################################")
+    print("\n")
+
     travail = []
     with open(liste, 'r') as filin:
         for nom in filin:
@@ -173,6 +180,12 @@ def multifasta_prot(liste,blast_dir,database):
         Outpus : multifasta which contains all the traducted proteins of
         the genes find in the genomes"""
 
+    #Informations
+    print("########################################################")
+    print("################# multifasta Creation ##########################")
+    print("########################################################")
+    print("\n")
+
     ##Vairables definitions
     multifasta_prot_dir = "{}/multifasta_prot".format(blast_dir)
 
@@ -213,10 +226,7 @@ def multifasta_prot(liste,blast_dir,database):
 
 
         ## Informations
-        print("########################################################")
-        print("################# {} multifasta Creation ##########################".format(g))
-        print("########################################################")
-        print("\n")
+        print("----> {} {}".format(nom,g))
 
         ## Writing the reference sequence into the multifasta file
         with open("{}/{}_multifasta_protein.fasta".format(multifasta_prot_dir,g),'w')\
@@ -241,8 +251,241 @@ def multifasta_prot(liste,blast_dir,database):
                                 for ligne in filin:
                                     filout.write(ligne)
 
+def blastp_results_strain(liste,blast_dir,threshold):
+    """ Parse the .xml file in order to extract specific informations such as :
+            - length of the alignment
+            - number of identities
+            - number of positives
+            - number of gaps
+            - number of all the differences
+
+        All the informations will be summarized in a variable called resultats and
+        separated by ; in order to be read in a .csv file
+
+        Inputs : blast_dir = general directory which will contain all the subdirectories
+                 name = name of the strain
+                 threshold =
+
+        Outputs : resultats = list which contains all the extracted informations
+        separated by a ; in order to create a .csv file
+        """
+
+    ## listing all the strains of the project
+    travail = []
+    with open(liste, 'r') as filin:
+        for nom in filin:
+            travail.append(nom[:-1])
+
+    # Creation of two containers
+    resultats = ["souche;proteine;longeur de la cible;longeur de la proteine;pourcentage de coverage;\
+    pourcentage d'identite;remarques;nombre de substitutions en AA;substitutions AA\n"]
+    genes_list = []
+    #For each strain in the list, parsing the blastp results
+    for nom in travail :
+        #Variables definition:
+        input_blastp_dir = "{}{}/{}_blast_protein/".format(blast_dir,nom,nom)
+
+        #### Adding all the genes find by blastp into a genes_list
+        for subject in glob.glob("{}/*_blastp_xml.txt".format(input_blastp_dir)):
+            genes = (subject.split("/")[-1]).split("_")[1]
+            if genes in genes_list:
+                continue
+            else :
+                genes_list.append(genes)
+
+        for gene in genes_list :
+            #Reading the xml format of the blast results file
+            with open("{}/{}_{}_blastp_xml.txt".format(input_blastp_dir,\
+            nom,gene)) as result_handle:
+                blast_records = NCBIXML.parse(result_handle)
+                E_VALUE_THRESH = 0.0000001
+                res = []
+                for blast_record in blast_records:
+                    if blast_record.alignments:
+                        for alignment in blast_record.alignments:
+                            for hsp in alignment.hsps:
+                                #Variables definition
+                                souche = nom
+                                contig = blast_record.query
+                                g = (alignment.title.split(" ")[1].split("-")[0])\
+                                .split("_")[0]
+                                #query information
+                                query_start = hsp.query_start
+                                query_end = hsp.query_end
+
+                                #Subject information
+                                subject_longueur = int(alignment.length)
+                                sbjct_start = hsp.sbjct_start
+                                sbjct_end = hsp.sbjct_end
+
+                                #alignment information
+                                gaps = hsp.gaps
+                                proba = hsp.expect
+                                id = hsp.identities
+                                positive = hsp.positives
+                                alignement_longueur = len(str(hsp.query))
+
+                                #calculs
+                                perc_ident = int(id) / float(subject_longueur) * 100
+                                coverage = ((int(alignement_longueur) - int(gaps)) \
+                                / float(subject_longueur))
+                                perc_coverage = (((int(alignement_longueur) - int(gaps))\
+                                / float(subject_longueur)) * 100)
+
+                                #containers
+                                remarque = [] ## list which will contain all the 3' and/or 5' deletions
+                                substitutions = [] ## list which will contain all the nt substitutions
+
+                                ##keeping only sequence for which coverage is > to a threshold
+                                #by default threshold = 80
+                                if perc_coverage >= int(threshold):
+
+                                    ###looking for N-terminal or C-terminal deletions
+                                    if sbjct_start != 1 and sbjct_end != 1:
+                                        remarque.append("tronquee en N-terminal")
+
+                                    if sbjct_start != subject_longueur and sbjct_end != subject_longueur:
+                                        remarque.append("tronquee en C-terminal")
+                                    if not remarque :
+                                        remarque.append("-")
+
+                                    ###looking for AA substitutions
+                                    for i in range(0,len(hsp.sbjct)):
+                                        if hsp.sbjct[i] != hsp.query[i]:
+                                            substitutions.append("{} remplace {} en position {}".format(hsp.query[i],hsp.sbjct[i], i))
+
+                                    nb_substitutions = len(substitutions)
+                                    if not substitutions:
+                                        substitutions.append('-')
+
+                                    resultats.append("{};{};{};{};{:.2f};{:.2f};{};{};{}\n"\
+                                    .format(nom,gene,subject_longueur, \
+                                    alignement_longueur, perc_coverage, perc_ident,\
+                                    "_".join(remarque),nb_substitutions,",".join(substitutions)))
+
+        resultats.append("{};le nombre de genes trouves est de {};{};{};{};{};{};{};{}\n".\
+        format(nom, len(genes_list), "-", "-", "-", "-", "-", "-", "-"))
+
+    return resultats
+
+def blastp_results_gene(liste,blast_dir,threshold):
+    """ Parse the .xml file in order to extract specific informations such as :
+            - length of the alignment
+            - number of identities
+            - number of positives
+            - number of gaps
+            - number of all the differences
+
+        All the informations will be summarized in a variable called resultats and
+        separated by ; in order to be read in a .csv file
+
+        Inputs : blast_dir = general directory which will contain all the subdirectories
+                 name = name of the strain
+                 threshold =
+
+        Outputs : resultats = list which contains all the extracted informations
+        separated by a ; in order to create a .csv file
+        """
+
+    ## listing all the strains of the project
+    travail = []
+    with open(liste, 'r') as filin:
+        for nom in filin:
+            travail.append(nom[:-1])
+
+    # Creation of two containers
+    genes_list = []
+    dico = {}
+    #For each strain in the list, parsing the blastp results
+    for nom in travail :
+        #Variables definition:
+        input_blastp_dir = "{}{}/{}_blast_protein/".format(blast_dir,nom,nom)
+
+        #### Adding all the genes find by blastp into a genes_list
+        for subject in glob.glob("{}/*_blastp_xml.txt".format(input_blastp_dir)):
+            genes = (subject.split("/")[-1]).split("_")[1]
+            if genes in genes_list:
+                continue
+            else :
+                genes_list.append(genes)
+
+        for gene in genes_list :
+            dico[gene] = ["souche;proteine;longeur de la cible;longeur de la proteine;pourcentage de coverage; pourcentage d'identite;remarques;nombre de substitutions en AA;substitutions AA\n"]
+
+    #For each strain in the list, parsing the blastp results
+    for nom in travail :
+        #Variables definition:
+        input_blastp_dir = "{}{}/{}_blast_protein/".format(blast_dir,nom,nom)
+
+        for gene in genes_list :
+            #Reading the xml format of the blast results file
+            with open("{}/{}_{}_blastp_xml.txt".format(input_blastp_dir,\
+            nom,gene)) as result_handle:
+                blast_records = NCBIXML.parse(result_handle)
+                E_VALUE_THRESH = 0.0000001
+                res = []
+                for blast_record in blast_records:
+                    if blast_record.alignments:
+                        for alignment in blast_record.alignments:
+                            for hsp in alignment.hsps:
+                                #query information
+                                query_start = hsp.query_start
+                                query_end = hsp.query_end
+
+                                #Subject information
+                                subject_longueur = int(alignment.length)
+                                sbjct_start = hsp.sbjct_start
+                                sbjct_end = hsp.sbjct_end
+
+                                #alignment information
+                                gaps = hsp.gaps
+                                proba = hsp.expect
+                                id = hsp.identities
+                                positive = hsp.positives
+                                alignement_longueur = len(str(hsp.query))
+
+                                #calculs
+                                perc_ident = int(id) / float(subject_longueur) * 100
+                                coverage = ((int(alignement_longueur) - int(gaps)) \
+                                / float(subject_longueur))
+                                perc_coverage = (((int(alignement_longueur) - int(gaps))\
+                                / float(subject_longueur)) * 100)
+
+                                #containers
+                                remarque = [] ## list which will contain all the 3' and/or 5' deletions
+                                substitutions = [] ## list which will contain all the nt substitutions
+
+                                ##keeping only sequence for which coverage is > to a threshold
+                                #by default threshold = 80
+                                if perc_coverage >= int(threshold):
+                                        ###looking for N-terminal or C-terminal deletions
+                                    if sbjct_start != 1 and sbjct_end != 1:
+                                        remarque.append("tronquee en N-terminal")
+
+                                    if sbjct_start != subject_longueur and sbjct_end != subject_longueur:
+                                        remarque.append("tronquee en C-terminal")
+                                    if not remarque :
+                                        remarque.append("-")
+
+                                        ###looking for AA substitutions
+                                    for i in range(0,len(hsp.sbjct)):
+                                        if hsp.sbjct[i] != hsp.query[i]:
+                                            substitutions.append("{} remplace {} en position {}".format(hsp.query[i],hsp.sbjct[i], i))
+
+                                    nb_substitutions = len(substitutions)
+                                    if not substitutions:
+                                        substitutions.append('-')
+
+                                    res.append("{};{};{};{};{:.2f};{:.2f};{};{};{}\n"\
+                                    .format(nom,gene,subject_longueur, \
+                                    alignement_longueur, perc_coverage, perc_ident,\
+                                    "_".join(remarque),nb_substitutions,",".join(substitutions)))
+
+                                    ajout = dico[gene] + res
+                                    dico[gene] = ajout
 
 
+    return dico
 
 if __name__ == "__main__":
 
@@ -251,16 +494,12 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("-l", "--list", dest="list", \
     help="list which contains all the name of the strains", default='')
-    parser.add_argument("-o", "--outputPath", dest="out_path",\
-    help="Path to blast output", default='')
     parser.add_argument("-b", "--blast_dir", dest="blast_directory",\
     help="Path to the directory which contains all blastn results", default='')
-    parser.add_argument("-e", "--extension", dest="extension",\
-    help="fasta extension such as .fasta .fa .awked.fasta .agp.fasta", default='')
     parser.add_argument("-db", "--database", dest="database",\
     help="Indicate directory which contains all the fasta files as subject", default='')
     parser.add_argument("-filename", "--filename", dest="filename",\
-    help="summary output file name", default='summary_blast')
+    help="summary output file name", default='summary_blastp')
     parser.add_argument("-t", "--threshold", dest="threshold",\
     help="minimum percentage of coverage int", default='80')
     args = parser.parse_args()
@@ -268,13 +507,27 @@ if __name__ == "__main__":
     # Variables difinition
     liste = args.list
     blast_dir = args.blast_directory
-    outputdir = args.out_path
-    fasta_extension = args.extension
     nom_fichier = args.filename
     database = args.database
     threshold = args.threshold
 
-    #strain_trad(liste,blast_dir)
-    #multifasta_prot(liste,blast_dir,database)
-    #blastp_souche("FAY1", blast_dir, database)
+    # launching functions
+    strain_trad(liste,blast_dir)
+    multifasta_prot(liste,blast_dir,database)
     blastp_all(liste,blast_dir, database)
+
+    with open("{}{}_per_strain.csv".format(blast_dir,nom_fichier), "w") as filout:
+        for ligne in blastp_results_strain(liste,blast_dir,threshold):
+            filout.write(str(ligne))
+        filout.write("\n")
+
+
+    with open("{}{}_per_gene.csv".format(blast_dir,nom_fichier), "w") as filout:
+        for clef in blastp_results_gene(liste,blast_dir,threshold).keys():
+            filout.write(clef+ '\n')
+            for ligne in blastp_results_gene(liste,blast_dir,threshold)[clef]:
+                if len(blastp_results_gene(liste,blast_dir,threshold)[clef]) == 1:
+                    filout.write("ATTENTION Proteine tronquee +++++\n")
+                else:
+                    filout.write(str(ligne))
+            filout.write("\n")
