@@ -168,11 +168,53 @@ colnames(nb.demandes.1218) = c("Dates", "Nombres.demandes")
 ################################ Summary of the data ########################################################
 ##############################################################################################################
 
+nb.demandes.rea = demandes.sans.doublon[grepl("^1610$|^1630$|^611$|^612$|^620$",demandes.sans.doublon$Correspondant),]
+ecolrea = ecolblse1218[grepl("^1610$|^1630$|^611$|^612$|^620$",ecolblse1218$Correspondant),]
+kprea = kpblse1218[grepl("^1610$|^1630$|^611$|^612$|^620$",kpblse1218$Correspondant),]
+
+nbecolrea = compteur(ecolrea,2012,2018)
+colnames(nbecolrea) = c("Dates", "Nombres.ecolblse")
+nbkprea = compteur(kprea,2012,2018)
+colnames(nbkprea) = c("Dates", "Nombres.kpblse")
+rea1218 = compteur(nb.demandes.rea,2012,2018)
+colnames(rea1218) = c("Dates", "Nombres.demandes")
+
+rea = merge(rea1218, nbecolrea, by.x = "Dates", by.y = "Dates")
+rea$tauxecol = round(rea$Nombres.ecolblse/rea$Nombres.demandes, digits = 2)
+rea = merge(rea, nbkprea, by.x = "Dates", by.y = "Dates")
+rea$tauxkp = round(rea$Nombres.kpblse/rea$Nombres.demandes, digits = 2)
+rea[is.na(rea)] = 0
+
+
+setwd("~/Desktop/")
+
 resume = merge(nb.demandes.1218, nb.kpblse.1218, by.x = "Dates", by.y = "Dates")
 resume$tauxkpn = round(resume$Nombres.kpblse/resume$Nombres.demandes, digits = 2)
 resume = merge(resume, nb.ecolblse.1218, by.x = "Dates", by.y = "Dates")
 resume$tauxecol = round(resume$Nombres.ecolblse/resume$Nombres.demandes, digits = 2)
 resume[is.na(resume)] = 0
+write.table(ecolrea, "ecolrea.csv", sep = ";", row.names = FALSE)
+write.table(kprea, "kprea.csv", sep = ";", row.names = FALSE)
+write.table(nb.demandes.rea, "demandes_rea.csv", sep = ";", row.names = FALSE)
+write.table(rea, "resume_rea.csv", sep = ";", row.names = FALSE)
+
+
+
+ggplot(data=rea) +
+  geom_line(aes(x=Dates, y = Nombres.kpblse, color = "blse"))+
+  geom_line(aes(x=Dates, y = Nombres.ecolblse, color = "ecol"))+
+  scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y", limits = c(min(resume$Dates), max(resume$Dates)))+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1), legend.position = "top")
+
+ggplot(data=rea) +
+  #geom_line(aes(x=Dates, y = Nombres.kpblse, color = "kpblse"))+
+  geom_line(aes(x=Dates, y = tauxkp, color = "taux kpn"))+
+  geom_line(aes(x=Dates, y = tauxecol, color = "taux ecol"))+
+  scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y", limits = c(min(resume$Dates), max(resume$Dates)))+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1), legend.position = "top")
+
 
 plot(resume$Dates,resume$Nombres.demandes, type = "l")
 
