@@ -14,6 +14,7 @@ import glob
 from Bio.Seq import Seq
 from Bio.Alphabet import generic_dna
 import sens_traduction as way
+import os
 
 def reversecomplement(seq):
     # Make reverse complement strand
@@ -52,7 +53,7 @@ def strain_trad(liste,blastdir):
         for fichier in glob.glob("{}/*.fasta".format(inputdir)):
             if fichier.find('tronquee') == -1: #not working on tronquee proteins
                 ## Variables definition:
-                gene = (fichier.split("/")[-1]).split("_")[0]
+                gene = (fichier.split("/")[-1]).replace("_{}_-_nt_sequence.fasta".format(nom),"")
                 prot_fasta = "{}/{}_{}_protein_sequence.fasta".\
                 format(output_dir_prot,gene,nom)
                 sequence_nt = []
@@ -115,14 +116,15 @@ def blastp(query, inputdir, subject, outputdir):
     Outputs : a specific output by strain which contains the two fasta files
     """
     #Variable definition
-    nom = query.replace("{}/".format(inputdir), "").split("_")[1]
-    gene = query.replace("{}/".format(inputdir), "").split("_")[0]
+    nom = inputdir.split("/")[-2]
+    gene = query.replace("{}/".format(inputdir), "").\
+    replace("_{}_protein_sequence.fasta".format(nom),"")
 
     subprocess.run(["blastp", "-query", "{}".format(query), "-subject", \
-    "{}".format(subject), "-out", "{}/{}_{}_blastp_xml.txt".format(outputdir,\
+    "{}".format(subject), "-out", "{}{}_{}_blastp_xml.txt".format(outputdir,\
     nom, gene),'-outfmt', '5'])
     subprocess.run(["blastp", "-query", "{}".format(query), "-subject", \
-    "{}".format(subject), "-out", "{}/{}_{}blastp.txt".format(outputdir,nom,gene)])
+    "{}".format(subject), "-out", "{}{}_{}blastp.txt".format(outputdir,nom,gene)])
 
 def blastp_all(liste,blast_dir,database):
     #Informations
@@ -159,7 +161,9 @@ def blastp_souche(nom, inputdir, db):
         if subject.find('tronquee') == -1: #not working on tronquee proteins
             paths = [] ## list which will contain the path of the query and the path of the subject
 
-            regex = re.compile("{}_".format(subject.replace("{}/".format(inputdir), "").split("_")[0]))
+            regex = re.compile("{}".format(subject.replace("{}/".format(inputdir), "").\
+            replace("_{}_protein_sequence.fasta".format(nom),"")))
+
             ## regex is the name of the gene which will be looked for in the protein directory and
             ## to the db directory
             if regex.search(subject):
@@ -204,7 +208,7 @@ def multifasta_prot(liste,blast_dir,database):
     for nom in travail :
         inputdir = "{}/{}/proteins_sequences".format(blast_dir,nom)
         for subject in glob.glob("{}/*.fasta".format(inputdir)):
-            genes = (subject.split("/")[-1]).split("_")[0]
+            genes = (subject.split("/")[-1]).replace("_{}_protein_sequence.fasta".format(nom),"")
             if genes in genes_list:
                 continue
             else :
@@ -226,7 +230,7 @@ def multifasta_prot(liste,blast_dir,database):
 
 
         ## Informations
-        print("----> {} {}".format(nom,g))
+        print("----> {}".format(g))
 
         ## Writing the reference sequence into the multifasta file
         with open("{}/{}_multifasta_protein.fasta".format(multifasta_prot_dir,g),'w')\
@@ -287,84 +291,85 @@ def blastp_results_strain(liste,blast_dir,threshold):
 
         #### Adding all the genes find by blastp into a genes_list
         for subject in glob.glob("{}/*_blastp_xml.txt".format(input_blastp_dir)):
-            genes = (subject.split("/")[-1]).split("_")[1]
+            genes = (subject.split("/")[-1]).replace("{}_".format(nom),"")
+            genes = genes.replace("_blastp_xml.txt","")
+
             if genes in genes_list:
                 continue
             else :
                 genes_list.append(genes)
 
         for gene in genes_list :
-            #Reading the xml format of the blast results file
-            with open("{}/{}_{}_blastp_xml.txt".format(input_blastp_dir,\
-            nom,gene)) as result_handle:
-                blast_records = NCBIXML.parse(result_handle)
-                E_VALUE_THRESH = 0.0000001
-                res = []
-                for blast_record in blast_records:
-                    if blast_record.alignments:
-                        for alignment in blast_record.alignments:
-                            for hsp in alignment.hsps:
-                                #Variables definition
-                                souche = nom
-                                contig = blast_record.query
-                                g = (alignment.title.split(" ")[1].split("-")[0])\
-                                .split("_")[0]
-                                #query information
-                                query_start = hsp.query_start
-                                query_end = hsp.query_end
+            if os.path.isfile("{}/{}_{}_blastp_xml.txt".format(input_blastp_dir,\
+            nom,gene)) == True:
+                #Reading the xml format of the blast results file
+                with open("{}{}_{}_blastp_xml.txt".format(input_blastp_dir,\
+                nom,gene)) as result_handle:
+                    blast_records = NCBIXML.parse(result_handle)
+                    E_VALUE_THRESH = 0.0000001
+                    res = []
+                    for blast_record in blast_records:
+                        if blast_record.alignments:
+                            for alignment in blast_record.alignments:
+                                for hsp in alignment.hsps:
+                                    #Variables definition
+                                    souche = nom
+                                    contig = blast_record.query
+                                    g = (alignment.title.split(" ")[1].split("-")[0])\
+                                    .split("_")[0]
+                                    #query information
+                                    query_start = hsp.query_start
+                                    query_end = hsp.query_end
 
-                                #Subject information
-                                subject_longueur = int(alignment.length)
-                                sbjct_start = hsp.sbjct_start
-                                sbjct_end = hsp.sbjct_end
+                                    #Subject information
+                                    subject_longueur = int(alignment.length)
+                                    sbjct_start = hsp.sbjct_start
+                                    sbjct_end = hsp.sbjct_end
 
-                                #alignment information
-                                gaps = hsp.gaps
-                                proba = hsp.expect
-                                id = hsp.identities
-                                positive = hsp.positives
-                                alignement_longueur = len(str(hsp.query))
+                                    #alignment information
+                                    gaps = hsp.gaps
+                                    proba = hsp.expect
+                                    id = hsp.identities
+                                    positive = hsp.positives
+                                    alignement_longueur = len(str(hsp.query))
 
-                                #calculs
-                                perc_ident = int(id) / float(subject_longueur) * 100
-                                coverage = ((int(alignement_longueur) - int(gaps)) \
-                                / float(subject_longueur))
-                                perc_coverage = (((int(alignement_longueur) - int(gaps))\
-                                / float(subject_longueur)) * 100)
+                                    #calculs
+                                    perc_ident = int(id) / float(subject_longueur) * 100
+                                    coverage = ((int(alignement_longueur) - int(gaps)) \
+                                    / float(subject_longueur))
+                                    perc_coverage = (((int(alignement_longueur) - int(gaps))\
+                                    / float(subject_longueur)) * 100)
 
-                                #containers
-                                remarque = [] ## list which will contain all the 3' and/or 5' deletions
-                                substitutions = [] ## list which will contain all the nt substitutions
+                                    #containers
+                                    remarque = [] ## list which will contain all the 3' and/or 5' deletions
+                                    substitutions = [] ## list which will contain all the nt substitutions
 
-                                ##keeping only sequence for which coverage is > to a threshold
-                                #by default threshold = 80
-                                if perc_coverage >= int(threshold):
+                                    ##keeping only sequence for which coverage is > to a threshold
+                                    #by default threshold = 80
+                                    if perc_coverage >= int(threshold):
 
-                                    ###looking for N-terminal or C-terminal deletions
-                                    if sbjct_start != 1 and sbjct_end != 1:
-                                        remarque.append("tronquee en N-terminal")
+                                        ###looking for N-terminal or C-terminal deletions
+                                        if sbjct_start != 1 and sbjct_end != 1:
+                                            remarque.append("tronquee en N-terminal")
 
-                                    if sbjct_start != subject_longueur and sbjct_end != subject_longueur:
-                                        remarque.append("tronquee en C-terminal")
-                                    if not remarque :
-                                        remarque.append("-")
+                                        if sbjct_start != subject_longueur and sbjct_end != subject_longueur:
+                                            remarque.append("tronquee en C-terminal")
+                                        if not remarque :
+                                            remarque.append("-")
 
-                                    ###looking for AA substitutions
-                                    for i in range(0,len(hsp.sbjct)):
-                                        if hsp.sbjct[i] != hsp.query[i]:
-                                            substitutions.append("{} remplace {} en position {}".format(hsp.query[i],hsp.sbjct[i], i))
+                                        ###looking for AA substitutions
+                                        for i in range(0,len(hsp.sbjct)):
+                                            if hsp.sbjct[i] != hsp.query[i]:
+                                                substitutions.append("{} remplace {} en position {}".format(hsp.query[i],hsp.sbjct[i], i))
 
-                                    nb_substitutions = len(substitutions)
-                                    if not substitutions:
-                                        substitutions.append('-')
+                                        nb_substitutions = len(substitutions)
+                                        if not substitutions:
+                                            substitutions.append('-')
 
-                                    resultats.append("{};{};{};{};{:.2f};{:.2f};{};{};{}\n"\
-                                    .format(nom,gene,subject_longueur, \
-                                    alignement_longueur, perc_coverage, perc_ident,\
-                                    "_".join(remarque),nb_substitutions,",".join(substitutions)))
-
-        resultats.append("{};le nombre de genes trouves est de {};{};{};{};{};{};{};{}\n".\
-        format(nom, len(genes_list), "-", "-", "-", "-", "-", "-", "-"))
+                                        resultats.append("{};{};{};{};{:.2f};{:.2f};{};{};{}\n"\
+                                        .format(nom,gene,subject_longueur, \
+                                        alignement_longueur, perc_coverage, perc_ident,\
+                                        "_".join(remarque),nb_substitutions,",".join(substitutions)))
 
     return resultats
 
@@ -403,7 +408,9 @@ def blastp_results_gene(liste,blast_dir,threshold):
 
         #### Adding all the genes find by blastp into a genes_list
         for subject in glob.glob("{}/*_blastp_xml.txt".format(input_blastp_dir)):
-            genes = (subject.split("/")[-1]).split("_")[1]
+            genes = (subject.split("/")[-1]).replace("{}_".format(nom),"")
+            genes = genes.replace("_blastp_xml.txt","")
+
             if genes in genes_list:
                 continue
             else :
@@ -418,71 +425,73 @@ def blastp_results_gene(liste,blast_dir,threshold):
         input_blastp_dir = "{}{}/{}_blast_protein/".format(blast_dir,nom,nom)
 
         for gene in genes_list :
-            #Reading the xml format of the blast results file
-            with open("{}/{}_{}_blastp_xml.txt".format(input_blastp_dir,\
-            nom,gene)) as result_handle:
-                blast_records = NCBIXML.parse(result_handle)
-                E_VALUE_THRESH = 0.0000001
-                res = []
-                for blast_record in blast_records:
-                    if blast_record.alignments:
-                        for alignment in blast_record.alignments:
-                            for hsp in alignment.hsps:
-                                #query information
-                                query_start = hsp.query_start
-                                query_end = hsp.query_end
+            if os.path.isfile("{}/{}_{}_blastp_xml.txt".format(input_blastp_dir,\
+            nom,gene)) == True:
+                #Reading the xml format of the blast results file
+                with open("{}/{}_{}_blastp_xml.txt".format(input_blastp_dir,\
+                nom,gene)) as result_handle:
+                    blast_records = NCBIXML.parse(result_handle)
+                    E_VALUE_THRESH = 0.0000001
+                    res = []
+                    for blast_record in blast_records:
+                        if blast_record.alignments:
+                            for alignment in blast_record.alignments:
+                                for hsp in alignment.hsps:
+                                    #query information
+                                    query_start = hsp.query_start
+                                    query_end = hsp.query_end
 
-                                #Subject information
-                                subject_longueur = int(alignment.length)
-                                sbjct_start = hsp.sbjct_start
-                                sbjct_end = hsp.sbjct_end
+                                    #Subject information
+                                    subject_longueur = int(alignment.length)
+                                    sbjct_start = hsp.sbjct_start
+                                    sbjct_end = hsp.sbjct_end
 
-                                #alignment information
-                                gaps = hsp.gaps
-                                proba = hsp.expect
-                                id = hsp.identities
-                                positive = hsp.positives
-                                alignement_longueur = len(str(hsp.query))
+                                    #alignment information
+                                    gaps = hsp.gaps
+                                    proba = hsp.expect
+                                    id = hsp.identities
+                                    positive = hsp.positives
+                                    alignement_longueur = len(str(hsp.query))
 
-                                #calculs
-                                perc_ident = int(id) / float(subject_longueur) * 100
-                                coverage = ((int(alignement_longueur) - int(gaps)) \
-                                / float(subject_longueur))
-                                perc_coverage = (((int(alignement_longueur) - int(gaps))\
-                                / float(subject_longueur)) * 100)
+                                    #calculs
+                                    perc_ident = int(id) / float(subject_longueur) * 100
+                                    coverage = ((int(alignement_longueur) - int(gaps)) \
+                                    / float(subject_longueur))
+                                    perc_coverage = (((int(alignement_longueur) - int(gaps))\
+                                    / float(subject_longueur)) * 100)
 
-                                #containers
-                                remarque = [] ## list which will contain all the 3' and/or 5' deletions
-                                substitutions = [] ## list which will contain all the nt substitutions
+                                    #containers
+                                    remarque = [] ## list which will contain all the 3' and/or 5' deletions
+                                    substitutions = [] ## list which will contain all the nt substitutions
 
-                                ##keeping only sequence for which coverage is > to a threshold
-                                #by default threshold = 80
-                                if perc_coverage >= int(threshold):
-                                        ###looking for N-terminal or C-terminal deletions
-                                    if sbjct_start != 1 and sbjct_end != 1:
-                                        remarque.append("tronquee en N-terminal")
+                                    ##keeping only sequence for which coverage is > to a threshold
+                                    #by default threshold = 80
+                                    if perc_coverage >= int(threshold):
+                                            ###looking for N-terminal or C-terminal deletions
+                                        if sbjct_start != 1 and sbjct_end != 1:
+                                            remarque.append("tronquee en N-terminal")
 
-                                    if sbjct_start != subject_longueur and sbjct_end != subject_longueur:
-                                        remarque.append("tronquee en C-terminal")
-                                    if not remarque :
-                                        remarque.append("-")
+                                        if sbjct_start != subject_longueur and sbjct_end != subject_longueur:
+                                            remarque.append("tronquee en C-terminal")
+                                        if not remarque :
+                                            remarque.append("-")
 
-                                        ###looking for AA substitutions
-                                    for i in range(0,len(hsp.sbjct)):
-                                        if hsp.sbjct[i] != hsp.query[i]:
-                                            substitutions.append("{} remplace {} en position {}".format(hsp.query[i],hsp.sbjct[i], i))
+                                            ###looking for AA substitutions
+                                        for i in range(0,len(hsp.sbjct)):
+                                            if hsp.sbjct[i] != hsp.query[i]:
+                                                substitutions.append("{} remplace {} en position {}".format(hsp.query[i],hsp.sbjct[i], i))
 
-                                    nb_substitutions = len(substitutions)
-                                    if not substitutions:
-                                        substitutions.append('-')
+                                        nb_substitutions = len(substitutions)
+                                        if not substitutions:
+                                            substitutions.append('-')
 
-                                    res.append("{};{};{};{};{:.2f};{:.2f};{};{};{}\n"\
-                                    .format(nom,gene,subject_longueur, \
-                                    alignement_longueur, perc_coverage, perc_ident,\
-                                    "_".join(remarque),nb_substitutions,",".join(substitutions)))
+                                        res.append("{};{};{};{};{:.2f};{:.2f};{};{};{}\n"\
+                                        .format(nom,gene,subject_longueur, \
+                                        alignement_longueur, perc_coverage, perc_ident,\
+                                        "_".join(remarque),nb_substitutions,",".join(substitutions)))
 
-                                    ajout = dico[gene] + res
-                                    dico[gene] = ajout
+                                        ajout = dico[gene] + res
+                                        dico[gene] = ajout
 
 
     return dico
@@ -511,10 +520,12 @@ if __name__ == "__main__":
     database = args.database
     threshold = args.threshold
 
+
+
     # launching functions
-    strain_trad(liste,blast_dir)
-    multifasta_prot(liste,blast_dir,database)
-    blastp_all(liste,blast_dir, database)
+    #strain_trad(liste,blast_dir)
+    #multifasta_prot(liste,blast_dir,database)
+    #blastp_all(liste,blast_dir, database)
 
     with open("{}{}_per_strain.csv".format(blast_dir,nom_fichier), "w") as filout:
         for ligne in blastp_results_strain(liste,blast_dir,threshold):
