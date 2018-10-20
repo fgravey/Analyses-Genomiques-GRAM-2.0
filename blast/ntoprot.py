@@ -523,15 +523,26 @@ if __name__ == "__main__":
 
 
     # launching functions
-    #strain_trad(liste,blast_dir)
-    #multifasta_prot(liste,blast_dir,database)
-    #blastp_all(liste,blast_dir, database)
+    strain_trad(liste,blast_dir)
+    multifasta_prot(liste,blast_dir,database)
+    blastp_all(liste,blast_dir, database)
+
+    #Informations
+    print("########################################################")
+    print("################# Writing {}_per_strain.csv ############".format(nom_fichier))
+    print("########################################################")
+    print("\n")
 
     with open("{}{}_per_strain.csv".format(blast_dir,nom_fichier), "w") as filout:
         for ligne in blastp_results_strain(liste,blast_dir,threshold):
             filout.write(str(ligne))
         filout.write("\n")
 
+    #Informations
+    print("########################################################")
+    print("################# Writing {}_per_gene.csv ############".format(nom_fichier))
+    print("########################################################")
+    print("\n")
 
     with open("{}{}_per_gene.csv".format(blast_dir,nom_fichier), "w") as filout:
         for clef in blastp_results_gene(liste,blast_dir,threshold).keys():
@@ -542,3 +553,8 @@ if __name__ == "__main__":
                 else:
                     filout.write(str(ligne))
             filout.write("\n")
+
+    #Informations
+    print("########################################################")
+    print("########### Script done Thanks for Using it ############".format(nom_fichier))
+    print("########################################################")
