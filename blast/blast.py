@@ -186,11 +186,15 @@ def blast_nt_result_filout(liste, fasta_dir, outputdir, fasta_extension, databas
     print("Le nombre de fichier est de : {}".format(len(travail)))
     sortie = ["souche;gene;contig;longeur de la cible;longeur du gene;pourcentage\
      de coverage;pourcentage d'identite;dna_strand;remarques;nombre de substitutions nucleotidiques;substitutions nucleotidiques\n"]
+
+    ## Information
+    print("############################################################################")
+    print("########################### Running Blastn ###############################")
+    print("############################################################################")
+    
     for nom in travail:
-        print("############################################################################")
-        print("########################### Working on {} ###############################".format(nom))
-        print("############################################################################")
-        print('\n')
+        # Information
+        print("-----> {}".format(nom))
         blastn(nom,outputdir,fasta_dir)
         sortie.append(blast_nt_result(nom,outputdir, threshold))
 
