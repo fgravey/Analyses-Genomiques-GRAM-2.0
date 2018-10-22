@@ -121,10 +121,10 @@ def blastp(query, inputdir, subject, outputdir):
     replace("_{}_protein_sequence.fasta".format(nom),"")
 
     subprocess.run(["blastp", "-query", "{}".format(query), "-subject", \
-    "{}".format(subject), "-out", "{}{}_{}_blastp_xml.txt".format(outputdir,\
+    "{}".format(subject), "-out", "{}/{}_{}_blastp_xml.txt".format(outputdir,\
     nom, gene),'-outfmt', '5'])
     subprocess.run(["blastp", "-query", "{}".format(query), "-subject", \
-    "{}".format(subject), "-out", "{}{}_{}blastp.txt".format(outputdir,nom,gene)])
+    "{}".format(subject), "-out", "{}/{}_{}blastp.txt".format(outputdir,nom,gene)])
 
 def blastp_all(liste,blast_dir,database):
     #Informations
