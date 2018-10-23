@@ -320,7 +320,7 @@ def blastn_results_gene(liste,outputdir,threshold):
                     genes_list.append(genes)
 
         for gene in genes_list :
-            dico[gene] = ["souche;gene;contig;longeur de la cible;longeur du gene;pourcentage de coverage; pourcentage d'identite;position;remarques;nombre de substitutions en AA;substitutions AA\n"]
+            dico[gene] = ["souche;gene;contig;longeur de la cible;longeur du gene;pourcentage de coverage; pourcentage d'identite;position;remarques;nombre de substitutions en AN;substitutions AN\n"]
 
     #For each strain in the list, parsing the blastp results
     for nom in travail :
@@ -374,12 +374,11 @@ def blastn_results_gene(liste,outputdir,threshold):
                                     ###looking for 5' or 3' deletions
                                     if sbjct_start != 1 and sbjct_end != 1:
                                         remarque.append("tronquee en 5'")
-
-                                    elif sbjct_start != subject_longueur and sbjct_end != subject_longueur:
-                                            remarque.append("tronquee en 3'")
+                                    if sbjct_start != subject_longueur and sbjct_end != subject_longueur:
+                                        remarque.append("tronquee en 3'")
                                     if not remarque :
-                                            remarque.append("-")
-                                    print(remarque)
+                                        remarque.append("-")
+
                                     ###looking for AN substitutions
                                     if sbjct_start > sbjct_end:
                                         dna_strand = "-1"
@@ -394,19 +393,19 @@ def blastn_results_gene(liste,outputdir,threshold):
                                             if hsp.sbjct[i] != hsp.query[i]:
                                                 substitutions.append("{} remplace {} en position {}".format(hsp.query[i],hsp.sbjct[i], i))
 
-                                nb_substitutions = len(substitutions)
-                                if not substitutions:
-                                    substitutions.append('-')
+                                    nb_substitutions = len(substitutions)
+                                    if not substitutions:
+                                        substitutions.append('-')
 
-                                res.append("{};{};{};{};{};{:.2f};{:.2f};{};{};{};{}\n"\
-                                .format(nom,gene,contig,subject_longueur, \
-                                alignement_longueur, perc_coverage, perc_ident,\
-                                position,"_".join(remarque),nb_substitutions,\
-                                ",".join(substitutions)))
+                                    res.append("{};{};{};{};{};{:.2f};{:.2f};{};{};{};{}\n"\
+                                    .format(nom,gene,contig,subject_longueur, \
+                                    alignement_longueur, perc_coverage, perc_ident,\
+                                    position,"_".join(remarque),nb_substitutions,\
+                                    ",".join(substitutions)))
 
 
-                                ajout = dico[gene] + res
-                                dico[gene] = ajout
+                                    ajout = dico[gene] + res
+                                    dico[gene] = ajout
 
     return dico
 
