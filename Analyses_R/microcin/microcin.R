@@ -108,3 +108,48 @@ write.xlsx(mcmI_net, file = "Microcin_results.xlsx", sheetName = "mcmI", row.nam
 write.xlsx(mchB_net, file = "Microcin_results.xlsx", sheetName = "mchB", row.names = FALSE, append = TRUE)
 write.xlsx(mchI_net, file = "Microcin_results.xlsx", sheetName = "mchI", row.names = FALSE, append = TRUE)
 write.xlsx(mcjA, file = "Microcin_results.xlsx", sheetName = "mcjA", row.names = FALSE, append = TRUE)
+
+
+### Mooving to the working directory
+setwd("~/Desktop/")
+H47 = read.csv("mchB_Microcin_H47.csv", sep = ";", header = TRUE, stringsAsFactors = FALSE)
+C46 = read.csv("mchB_Strain_CA46.csv", sep = ";", header = TRUE, stringsAsFactors = FALSE)
+nissle = read.csv("mchB_Strain_CA46.csv", sep = ";", header = TRUE, stringsAsFactors = FALSE)
+
+
+print(paste(H47$pourcentage.d.identite,C46$pourcentage.d.identite, nissle$pourcentage.d.identite))
+#### Les séquences mchB de C46 ey nissle sont identiques, arrêt travail sur nissle
+
+df = H47[FALSE,]
+for (nom in H47$souche){
+  if (H47$pourcentage.d.identite[H47$souche == nom] > C46$pourcentage.d.identite[H47$souche == nom]){
+    df = rbind(df,H47[H47$souche == nom,])
+  }else{
+    df = rbind(df,C46[C46$souche == nom,])
+  }
+}
+
+write.table(df, "mchB_best.csv", sep = ";", row.names = FALSE)
+
+
+### Mooving to the working directory
+setwd("~/Desktop/")
+H47 = read.csv("mchI_Microcin_H47.csv", sep = ";", header = TRUE, stringsAsFactors = FALSE)
+C46 = read.csv("mchI_Strain_CA46.csv", sep = ";", header = TRUE, stringsAsFactors = FALSE)
+nissle = read.csv("mchI_Strain_CA46.csv", sep = ";", header = TRUE, stringsAsFactors = FALSE)
+
+
+print(paste(H47$pourcentage.d.identite,C46$pourcentage.d.identite, nissle$pourcentage.d.identite))
+#### Les séquences mchB de C46 ey nissle sont identiques, arrêt travail sur nissle
+
+df = H47[FALSE,]
+for (nom in H47$souche){
+  if (H47$pourcentage.d.identite[H47$souche == nom] > C46$pourcentage.d.identite[H47$souche == nom]){
+    df = rbind(df,H47[H47$souche == nom,])
+  }else{
+    df = rbind(df,C46[C46$souche == nom,])
+  }
+}
+
+write.table(df, "mchI_best.csv", sep = ";", row.names = FALSE)
+
