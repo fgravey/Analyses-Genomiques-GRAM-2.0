@@ -84,32 +84,31 @@ atb = function(path){
              "nitroimidazole","oxazolidinone")]
 }
 
-mlst = function(path){
+mlst = function(path,express){
   ## function which read a txt file and return a df 
   ## Input : absolute path of a text file of mlstfinder result
   ## output : dataframe with file column cleaned
   df = read.table(path, header = TRUE, stringsAsFactors = FALSE)
-  df$file = gsub("/pasteur/projets/policy01/shigella-ngs/EcCaen/Ecoli_BLSE_2018/scfd_fasta/Ec", "", df$file)
-  df$file = gsub("/pasteur/projets/policy01/shigella-ngs/EcCaen/Rea_neonat/fasta/scfd_fasta/", "", df$file)
-  df$file = gsub("/pasteur/projets/policy01/shigella-ngs/EcCaen/BLSE/fasta/fasta_files/awked_fasta/", "", df$file)
+  df$file = gsub(express, "", df$file)
   df$file = gsub("_S[0-9]+.scfd.fasta", "", df$file)
   df$file = gsub(".scfd.fasta", "", df$file)
   df$file = gsub(".awked.fasta", "", df$file)
+  df$file = gsub(".fasta","", df$file)
+  df = df[,c(1,3,2)]
   return(df)
 }
 
-sero = function(path){
+sero = function(path, express){
   ## function which read a txt file and return a df 
   ## Input : absolute path of a text file of serotypefinder result
   ## output : dataframe with file column cleaned
   df = read.table(path, header = TRUE, stringsAsFactors = FALSE)
   df$OH = paste(gsub("wz[a-z]_","",df$O), gsub("fliC_","",df$H), sep = ":")
   df = df[,c("file","OH")]
-  df$file = gsub("/pasteur/projets/policy01/shigella-ngs/EcCaen/Ecoli_BLSE_2018/scfd_fasta/Ec", "", df$file)
-  df$file = gsub("/pasteur/projets/policy01/shigella-ngs/EcCaen/Rea_neonat/fasta/awked_fasta/", "", df$file)
-  df$file = gsub("/pasteur/projets/policy01/shigella-ngs/EcCaen/BLSE/fasta/fasta_files/awked_fasta/", "", df$file)
+  df$file = gsub(express, "", df$file)
   df$file = gsub("_S[0-9]+.scfd.fasta", "", df$file)
   df$file = gsub(".awked.fasta", "", df$file)
+  df$file = gsub(".fasta", "", df$file)
   return(df)
 }
 
@@ -124,7 +123,7 @@ fim = function(path){
   return(df)
 }
 
-viru = function(path){
+viru = function(path,express){
   ## function which read a txt file and return a df 
   ## function which summarized all the virulence genes find in one line "virulence"
   ## Input : absolute path of a text file of mlstfinder result
@@ -142,12 +141,11 @@ df$virulence = apply(df[,-c(1)], 1, function(a){
 })
 
 df = df[,c("file","virulence")]
-df$file = gsub("/pasteur/projets/policy01/shigella-ngs/EcCaen/run180223/fasta/","", df$file)
-df$file = gsub("/pasteur/projets/policy01/shigella-ngs/EcCaen/Rea_neonat/fasta/awked_fasta/", "", df$file)
-df$file = gsub("/pasteur/projets/policy01/shigella-ngs/EcCaen/Ecoli_BLSE_2018/scfd_fasta/Ec", "", df$file)
+df$file = gsub(express,"", df$file)
 df$file = gsub(".scfd.fastq.awked.fasta","", df$file)
 df$file = gsub(".awked.fasta","", df$file)
 df$file = gsub("_S[0-9]+.scfd.fasta", "", df$file)
+df$file = gsub(".fasta", "", df$file)
 return(df)
 }
 
