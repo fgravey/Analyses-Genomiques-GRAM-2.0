@@ -118,8 +118,6 @@ fim = function(path){
   ## output : dataframe with file column cleaned
   df = read.table(path, sep = '\t',header = TRUE, stringsAsFactors = FALSE)
   df = df[,c("Souche","Fimtype")]
-  df$Souche = gsub(".agp.fasta", "", df$Souche)
-  df$Souche = gsub("Ec", "", df$Souche)
   return(df)
 }
 
