@@ -1,4 +1,6 @@
 
+#source("~/Documents/These_de_science/scripts/Analyses_R/function.R")
+
 plasmides_trie = function(df){
   df_trie = df[FALSE,] #creation d'un tableau vide de lignes mais ayant les colones déja prêtes 
   
