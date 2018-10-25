@@ -181,9 +181,51 @@ c3gr = function(file){
   dfr = df[df$X9CAZ1 == "R" | df$X9CTX1 == "R" | df$X9CRO1 == "R",]
   dfr = dfr[!(duplicated(dfr$Patient)),]
   dfr = dfr[grepl("^[0-9]+$", dfr$Correspondant),]
+  dfr$Date.de.prel. = gsub("/", "", dfr$Date.de.prel.)
+  dfr$Date.de.prel. = dmy(dfr$Date.de.prel.)
+  dfr = dfr[,c(1:10,12,17)]
   return(dfr)
 }
 
+blse = function(file){
+  df = read.csv(file, sep = ";", header = TRUE, stringsAsFactors = FALSE)
+  df = df[grepl("^[0-9]+$", df$Correspondant),]
+  df = df[,c(1,5)]
+  df$atb = "blse"
+  return(df)
+}
+
+typage = function(path1,path2){
+  dfr = c3gr(path1)
+  bmr = blse(path2)
+  atb = c()
+  atb[dfr$N.demande %in% bmr$N.demande] = "blse"
+  atb[is.na(atb)] = "autres"
+  dfr$atb = atb
+  print(table(dfr$atb))
+  return(dfr)
+}
+
+compteur = function(df,annee_1,annee_2){
+  date = c()
+  nb = c()
+  for (i in seq(annee_1,annee_2)){
+    for (j in seq(1,12)){
+      annee= df[year(df$Date.prelevement) == i,]
+      mois = sum(month(annee$Date.prelevement) == j)
+      print(mois)
+      nb = append(nb, mois)
+      if (j < 10){
+        j = paste(0,j,sep = "")
+      }
+      date = append(date, paste(i, j,"01", sep = "/"))
+    }
+  }
+  
+  out = data.frame(Dates = ymd(date), Nombres.kpblse= nb, stringsAsFactors = FALSE)
+  
+  return(out)
+}
 
 compteur = function(df,annee_1,annee_2){
   date = c()
