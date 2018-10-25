@@ -175,3 +175,33 @@ resume_years = function(x,df){
   data = data[order(data$number.total, decreasing = TRUE),]
   return(data)
 }
+
+c3gr = function(file){
+  df = read.csv(file, sep = ";", header = TRUE, stringsAsFactors = FALSE)
+  dfr = df[df$X9CAZ1 == "R" | df$X9CTX1 == "R" | df$X9CRO1 == "R",]
+  dfr = dfr[!(duplicated(dfr$Patient)),]
+  dfr = dfr[grepl("^[0-9]+$", dfr$Correspondant),]
+  return(dfr)
+}
+
+
+compteur = function(df,annee_1,annee_2){
+  date = c()
+  nb = c()
+  for (i in seq(annee_1,annee_2)){
+    for (j in seq(1,12)){
+      annee= df[year(df$Date.prelevement) == i,]
+      mois = sum(month(annee$Date.prelevement) == j)
+      print(mois)
+      nb = append(nb, mois)
+      if (j < 10){
+        j = paste(0,j,sep = "")
+      }
+      date = append(date, paste(i, j,"01", sep = "/"))
+    }
+  }
+  
+  out = data.frame(Dates = ymd(date), Nombres.kpblse= nb, stringsAsFactors = FALSE)
+  
+  return(out)
+}
