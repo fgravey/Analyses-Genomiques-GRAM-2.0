@@ -10,10 +10,10 @@ Le script suivant : `/Users/Francois/cge_softwares/mlst/mlst.py` peut fonctionne
 
 ## Liste des scripts cge utilisés:
 
-- fimtyper --> script python ok
-- mlst
-- plasmidfinder --> script python ok
-- pmlst --> script python ok
+- fimtyper v1.1--> script python [ok](https://github.com/fgravey/Phd_student/blob/master/cge_software_local/fimtyper.py)
+- mlst 2018-09-07
+- plasmidfinder 2018-09-28 --> script python ok
+- pmlst 2018-09-10 --> script python ok
 - resfinder --> script python ok
-- serotypefinder updated 2018-10-09 --> 
+- serotypefinder updated 2018-10-09 -->
 - virulencefinder
