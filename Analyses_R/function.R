@@ -187,11 +187,29 @@ c3gr = function(file){
   return(dfr)
 }
 
+penemsr = function(file){
+  df = read.csv(file, sep = ";", header = TRUE, stringsAsFactors = FALSE)
+  dfr = df[df$X9ERT1 == "R" | df$X9IPM1 == "R" | df$X9MER1 == "R",]
+  dfr = dfr[!(duplicated(dfr$Patient)),]
+  dfr = dfr[grepl("^[0-9]+$", dfr$Correspondant),]
+  dfr$Date.de.prel. = gsub("/", "", dfr$Date.de.prel.)
+  dfr$Date.de.prel. = dmy(dfr$Date.de.prel.)
+  dfr = dfr[,c(1:10,12,17)]
+  return(dfr)
+}
+
+carba = function(file){
+  df = read.csv(file, sep = ";", header = TRUE, stringsAsFactors = FALSE)
+  df = df[grepl("^[0-9]+$", df$Correspondant),]
+  df = df[,c(1,5)]
+  return(df)
+}
+
+
 blse = function(file){
   df = read.csv(file, sep = ";", header = TRUE, stringsAsFactors = FALSE)
   df = df[grepl("^[0-9]+$", df$Correspondant),]
   df = df[,c(1,5)]
-  df$atb = "blse"
   return(df)
 }
 
@@ -200,6 +218,17 @@ typage = function(path1,path2){
   bmr = blse(path2)
   atb = c()
   atb[dfr$N.demande %in% bmr$N.demande] = "blse"
+  atb[is.na(atb)] = "autres"
+  dfr$atb = atb
+  print(table(dfr$atb))
+  return(dfr)
+}
+
+typage_carba = function(path1,path2){
+  dfr = penemsr(path1)
+  bmr = carba(path2)
+  atb = c()
+  atb[dfr$N.demande %in% bmr$N.demande] = "carba"
   atb[is.na(atb)] = "autres"
   dfr$atb = atb
   print(table(dfr$atb))
@@ -227,23 +256,16 @@ compteur = function(df,annee_1,annee_2){
   return(out)
 }
 
-compteur = function(df,annee_1,annee_2){
-  date = c()
-  nb = c()
+compteur.annee = function(df,annee_1,annee_2,express){
+  per.year = c()
+  bmr = c()
+  autres = c()
   for (i in seq(annee_1,annee_2)){
-    for (j in seq(1,12)){
-      annee= df[year(df$Date.prelevement) == i,]
-      mois = sum(month(annee$Date.prelevement) == j)
-      print(mois)
-      nb = append(nb, mois)
-      if (j < 10){
-        j = paste(0,j,sep = "")
-      }
-      date = append(date, paste(i, j,"01", sep = "/"))
-    }
+    dfannee = df[year(df$Date.de.prel.) == i,]
+    per.year = append(per.year, as.numeric(length(dfannee$Patient)))
+    bmr = append(bmr, as.numeric(sum(dfannee$atb == express)))
+    autres = append(autres, as.numeric(sum(dfannee$atb == "autres")))
   }
-  
-  out = data.frame(Dates = ymd(date), Nombres.kpblse= nb, stringsAsFactors = FALSE)
-  
-  return(out)
+  sortie = data.frame(années = seq(annee_1,annee_2), c3gR.total = per.year, blse = bmr, autres = autres, stringsAsFactors = FALSE)
+  return(sortie)
 }
