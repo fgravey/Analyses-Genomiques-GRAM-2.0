@@ -18,4 +18,5 @@ trad = {"acrA" : "reverse", "acrB" : "reverse", "acrR" : "strand", \
 "mchB_Microcin_H47_Strain_H47" : "strand", "mchI_Microcin_H47_Strain_H47" : "strand",\
 "mcmA_Strain_Nissle" : "strand", "mcmI_Strain_Nissle" : "strand",\
 "mchB_Strain_CA46" : "strand", "mchI_Strain_CA46" : "strand",\
-"mchB_Strain_Nissle2" : "strand", "mchI_Strain_Nissle2" : "strand"}
+"mchB_Strain_Nissle2" : "strand", "mchI_Strain_Nissle2" : "strand", \
+"RomA" : "strand", "romR" : "strand", "porin" : "strand"}
