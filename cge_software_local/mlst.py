@@ -48,7 +48,7 @@ def mlst_strain(nom,fasta_dir,fasta_extension,outputdir,specie):
         allele.append(data["mlst"]["results"]["allele_profile"][clef]["allele_name"].replace("_", "-"))
 
     #Creating the res container for each strain
-    res = "{};ST{};{}\n".format(nom,ST,",".join(allele))
+    res = "{};ST{};{}\n".format(nom,ST,",".join(sorted(allele)))
 
     #End of the function
     return(res)
