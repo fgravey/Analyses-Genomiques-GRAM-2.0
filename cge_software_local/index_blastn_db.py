@@ -10,7 +10,12 @@ import os.path
 
 
 def mlst_db_blastn_index(db_path):
-
+    """ Automatically create an indexed blast database using the makeblastdb function
+    for all the genomes available in the mlst database from cge site
+    - Inputs : general path of the mlst cge database
+    - Outputs : in each directory corresponding to the specie create indexed files which
+    will be used by the blastn function"""
+    
     ## listing all the directories:
     for dir in glob("{}*/".format(db_path)):
         #Variables definitions
