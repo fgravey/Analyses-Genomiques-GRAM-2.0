@@ -119,10 +119,14 @@ if __name__ == "__main__":
     parser.add_argument("-f", "--fasta_dir", dest="fasta_dir",help="", \
     default='Directory which contains all the fasta files')
     parser.add_argument("-e", "--extension", dest="extension",\
-    help="Any informations such as .agp.fasta .awked.fa .scfd.fasta .fasta .fa", default='')
-    parser.add_argument("-o", "--outputPath", dest="out_path",help="Path to blast output", default='')
-    parser.add_argument("-s", "--specie", dest="specie",help="Which specie are you working on ?", default='')
-    parser.add_argument("-filename", "--filename", dest="filename",help="name of the summary file", default='mlst_finder')
+    help="Any informations such as .agp.fasta .awked.fa .scfd.fasta .fasta .fa",\
+     default='')
+    parser.add_argument("-o", "--outputPath", dest="out_path",help="Path to blast output",\
+     default='')
+    parser.add_argument("-s", "--specie", dest="specie",help="Which specie are you working on ?",\
+     default='')
+    parser.add_argument("-filename", "--filename", dest="filename",help="name of the summary file",\
+     default='mlst_finder')
     args = parser.parse_args()
 
     #Defining varibales
