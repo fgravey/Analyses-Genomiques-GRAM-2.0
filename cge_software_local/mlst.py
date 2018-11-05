@@ -48,11 +48,43 @@ def mlst_strain(nom,fasta_dir,fasta_extension,outputdir,specie):
         allele.append(data["mlst"]["results"]["allele_profile"][clef]["allele_name"].replace("_", "-"))
 
     #Creating the res container for each strain
-    res = "{};ST{};{}".format(nom,ST,",".join(allele))
+    res = "{};ST{};{}\n".format(nom,ST,",".join(allele))
 
     #End of the function
     return(res)
 
+def mlst_all(liste,fasta_dir,fasta_extension,outputdir,specie):
+    #listing all the files which will be working on
+    travail = []
+    with open(liste, 'r') as filin:
+        for nom in filin:
+            travail.append(nom[:-1])
+
+    print("Voici la liste des fichiers sur lesquels vous allez travailler", travail)
+    print("Le nombre de fichier est de : {}".format(len(travail)))
+
+    #Container definitions which will contain all the information extract from serotypefinder script
+    mlst = ["Souche;ST;alleles\n"]
+
+    # Information
+    print("#########################################################")
+    print("############ Launching mlstfinder #######################")
+    print("#########################################################")
+
+    #Launching mlst_strain function
+    for nom in travail:
+        mlst.append(mlst_strain(nom,fasta_dir,fasta_extension,outputdir,specie))
+
+    #Cleaning process
+    subprocess.run(["rm", "-rf", "{}tmp".format(outputdir)])
+    subprocess.run(["rm", "{}MLST_allele_seq.fsa".format(outputdir)])
+    subprocess.run(["rm", "{}Hit_in_genome_seq.fsa".format(outputdir)])
+    subprocess.run(["rm", "{}results_tab.tsv".format(outputdir)])
+    subprocess.run(["rm", "{}results.txt".format(outputdir)])
+    subprocess.run(["rm", "{}data.json".format(outputdir)])
+
+    #End of the function
+    return(mlst)
 
 if __name__ == "__main__":
     ##########################################################################
@@ -68,19 +100,19 @@ if __name__ == "__main__":
     help="Any informations such as .agp.fasta .awked.fa .scfd.fasta .fasta .fa", default='')
     parser.add_argument("-o", "--outputPath", dest="out_path",help="Path to blast output", default='')
     parser.add_argument("-s", "--specie", dest="specie",help="Which specie are you working on ?", default='')
+    parser.add_argument("-filename", "--filename", dest="filename",help="name of the summary file", default='mlst_finder')
     args = parser.parse_args()
-#
-    #Defining varibales
-#
-    # liste = args.list
-    # fasta_dir = args.fasta_dir
-    # outputdir = args.out_path
-    # fasta_extension = args.extension
-    # specie = args.specie
 
-    nom = 'P1-01'
-    fasta_dir = '/Users/Francois/Documents/projets/ecoli/Rea_neonat/fasta/awked_fasta/'
-    outputdir = '/Users/Francois/Desktop/mlst/'
-    fasta_extension = '.awked.fasta'
-    specie = "ecoli"
-    mlst_strain(nom,fasta_dir,fasta_extension,outputdir,specie)
+    #Defining varibales
+
+    liste = args.list
+    fasta_dir = args.fasta_dir
+    outputdir = args.out_path
+    fasta_extension = args.extension
+    specie = args.specie
+    filename = args.filename
+
+    # Launching mlst_all function
+    with open("{}{}.csv".format(outputdir,filename), "w") as filout:
+        for ligne in mlst_all(liste,fasta_dir,fasta_extension,outputdir,specie):
+            filout.write(ligne)
