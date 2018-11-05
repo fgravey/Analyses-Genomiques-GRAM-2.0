@@ -9,6 +9,7 @@ import json
 from pprint import pprint
 import os.path
 from shutil import copyfile
+from argparse import ArgumentParser
 
 def best_identity(dico):
     """In a dictionary, looked for the key for which the identity rate is the highest
@@ -86,7 +87,7 @@ def serofinder(liste,fasta_dir,outputdir,fasta_extension,identity,coverage):
         res_H = data['serotypefinder']['results']['H_type'] #all the results obtained for H antigen
 
         #Working on results and checking if there is not an absence of results for each antigen
-        if res_O == 'No hit found':
+        if res_O == 'No hit found' or res_O == {}:
         #O results:
             coverage_O = "-"
             O_gene = "ND"
@@ -102,7 +103,7 @@ def serofinder(liste,fasta_dir,outputdir,fasta_extension,identity,coverage):
             O_id = best_O['identity']
             O_pos = best_O['contig_name']
 
-        if res_H == 'No hit found':
+        if res_H == 'No hit found' or res_H == {}:
         #H results:
             coverage_H = "-"
             H_gene = "ND"
@@ -126,17 +127,48 @@ def serofinder(liste,fasta_dir,outputdir,fasta_extension,identity,coverage):
     return sero
 
 if __name__ == "__main__":
-    ##### changing path
-    liste = '/Volumes/Maxtor/Back_up_pasteur/blse_ecoli_2018_ajout/blse_ajout.txt'
-    #working list which contains all the name of the working files
-    fasta_dir = '/Volumes/Maxtor/Back_up_pasteur/blse_ecoli_2018_ajout/fasta/agp_fasta/'
-    #directory which contains the fasta
-    outputdir = '/Users/Francois/Desktop/essai_sero/' #path to output files
-    fasta_extension = '.agp.fasta'
-    identity = '0.7'
-    coverage = '0.7'
-    filename = "serofinder"
 
+    # Parse command line options
+    ##########################################################################
+    parser = ArgumentParser()
+    parser.add_argument("-l", "--list", dest="list", \
+    help="list which contains all the name of the strains", default='')
+    parser.add_argument("-o", "--outputPath", dest="out_path",\
+    help="Path to blast output", default='')
+    parser.add_argument("-f", "--fasta_path", dest="fasta_path_dir",\
+    help="Path to the directory which contains all the fasta to analyse", default='')
+    parser.add_argument("-e", "--extension", dest="extension",\
+    help="fasta extension such as .fasta .fa .awked.fasta .agp.fasta", default='')
+    parser.add_argument("-filename", "--filename", dest="filename",\
+    help="summary output file name", default='serotypefinder')
+    parser.add_argument("-id", "--identity", dest="identity",\
+    help="minimum identity rate float", default='0.8')
+    parser.add_argument("-c", "--coverage", dest="coverage",\
+    help="minimum coverage rate float", default='0.8')
+    args = parser.parse_args()
+
+    ###############################################################################
+    # Variables difinition
+    liste = args.list
+    fasta_dir = args.fasta_path_dir
+    outputdir = args.out_path
+    fasta_extension = args.extension
+    nom_fichier = args.filename
+    identity = args.identity
+    coverage = args.coverage
+    filename = args.filename
+#
+    ####changing path
+    # liste = '/Volumes/Maxtor/Back_up_pasteur/blse_ecoli_2018_ajout/blse_ajout.txt'
+    #working list which contains all the name of the working files
+    # fasta_dir = '/Volumes/Maxtor/Back_up_pasteur/blse_ecoli_2018_ajout/fasta/agp_fasta/'
+    #directory which contains the fasta
+    # outputdir = '/Users/Francois/Desktop/essai_sero/' #path to output files
+    # fasta_extension = '.agp.fasta'
+    # identity = '0.7'
+    # coverage = '0.7'
+    # filename = "serofinder"
+#
     with open("{}{}.csv".format(outputdir,filename), "w") as filout:
         for ligne in serofinder(liste,fasta_dir,outputdir,fasta_extension,\
         identity,coverage):
