@@ -12,6 +12,16 @@ import json
 
 
 def mlst_strain(nom,fasta_dir,fasta_extension,outputdir,specie):
+
+    """ Use the mlst.py created by cge in order to determine the Sequence Type of the strains
+    Inputs : liste = .txt file which contains the name of the strains you wanted to work on
+             fasta_dir = directory which contains the .fasta files of the strains
+             outputdir = directory where you want to put the output files in
+             fasta_extension = extension of the fasta file .fasta, .fsa, .agp.fasta, etc
+             specie = name of the specie you are working on, see the text file in the script directory
+
+    Outputs : return a list which contains the strain name, the ST and the alleles names and numbers"""
+
     #unchanging paths
     mlst = '/Users/Francois/cge_softwares/mlst/mlst.py'
     mlst_db = '/Users/Francois/cge_data_bases/mlst_db'
@@ -54,6 +64,18 @@ def mlst_strain(nom,fasta_dir,fasta_extension,outputdir,specie):
     return(res)
 
 def mlst_all(liste,fasta_dir,fasta_extension,outputdir,specie):
+
+    """ Use the mlst.py created by cge in order to determine the Sequence Type of the strains
+    Inputs : liste = .txt file which contains the name of the strains you wanted to work on
+             fasta_dir = directory which contains the .fasta files of the strains
+             outputdir = directory where you want to put the output files in
+             fasta_extension = extension of the fasta file .fasta, .fsa, .agp.fasta, etc
+             specie = name of the specie you are working on, see the text file in the script directory
+
+    Outputs : for each strain, the results of mlst.py are collected into a
+              dedicated file which is named as strain_name_mlst.txt
+              a summary list which contains all the results for all the tested strains"""
+
     #listing all the files which will be working on
     travail = []
     with open(liste, 'r') as filin:
