@@ -36,7 +36,7 @@ def mlst_strain(nom,fasta_dir,fasta_extension,outputdir,specie):
     subprocess.run(["python", "{}".format(mlst), "-i", "{}".format(fasta),\
     "-o", "{}".format(outputdir), "-s", "{}".format(specie), "-p",\
     "{}".format(mlst_db), "-t", "{}".format(outputdir), "-mp", "blastn",\
-    "-x", "-q"])
+    "-x"])
 
     #Made a copy of the results.txt file form mlst.py script
     old_file = "{}results.txt".format(outputdir)
@@ -50,7 +50,17 @@ def mlst_strain(nom,fasta_dir,fasta_extension,outputdir,specie):
         data = json.load(filin)
 
     #Variables definition
+    plus_proche_st = []
     ST = data["mlst"]["results"]["sequence_type"]
+
+    # if ST is Unknown adding the nearest ST when is exists
+    if ST == "Unknown":
+        plus_proche_st(data["mlst"]["results"]["nearest_sts"])
+    else:
+        plus_proche_st("-")
+
+    if not plus_proche_st:
+        plus_proche_st.append("-")
 
     #Looking for allele results
     allele = []
@@ -58,7 +68,7 @@ def mlst_strain(nom,fasta_dir,fasta_extension,outputdir,specie):
         allele.append(data["mlst"]["results"]["allele_profile"][clef]["allele_name"].replace("_", "-"))
 
     #Creating the res container for each strain
-    res = "{};ST{};{}\n".format(nom,ST,",".join(sorted(allele)))
+    res = "{};ST{};{};{}\n".format(nom,ST,",".join(sorted(allele)),"".join(remarque))
 
     #End of the function
     return(res)
@@ -86,7 +96,7 @@ def mlst_all(liste,fasta_dir,fasta_extension,outputdir,specie):
     print("Le nombre de fichier est de : {}".format(len(travail)))
 
     #Container definitions which will contain all the information extract from serotypefinder script
-    mlst = ["Souche;ST;alleles\n"]
+    mlst = ["Souche;ST;alleles;plus_proche_st\n"]
 
     # Information
     print("#########################################################")
@@ -96,14 +106,14 @@ def mlst_all(liste,fasta_dir,fasta_extension,outputdir,specie):
     #Launching mlst_strain function
     for nom in travail:
         mlst.append(mlst_strain(nom,fasta_dir,fasta_extension,outputdir,specie))
-
+#
     #Cleaning process
-    subprocess.run(["rm", "-rf", "{}tmp".format(outputdir)])
-    subprocess.run(["rm", "{}MLST_allele_seq.fsa".format(outputdir)])
-    subprocess.run(["rm", "{}Hit_in_genome_seq.fsa".format(outputdir)])
-    subprocess.run(["rm", "{}results_tab.tsv".format(outputdir)])
-    subprocess.run(["rm", "{}results.txt".format(outputdir)])
-    subprocess.run(["rm", "{}data.json".format(outputdir)])
+    # subprocess.run(["rm", "-rf", "{}tmp".format(outputdir)])
+    # subprocess.run(["rm", "{}MLST_allele_seq.fsa".format(outputdir)])
+    # subprocess.run(["rm", "{}Hit_in_genome_seq.fsa".format(outputdir)])
+    # subprocess.run(["rm", "{}results_tab.tsv".format(outputdir)])
+    # subprocess.run(["rm", "{}results.txt".format(outputdir)])
+    # subprocess.run(["rm", "{}data.json".format(outputdir)])
 
     #End of the function
     return(mlst)
