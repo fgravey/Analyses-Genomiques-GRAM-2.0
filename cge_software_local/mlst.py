@@ -55,9 +55,9 @@ def mlst_strain(nom,fasta_dir,fasta_extension,outputdir,specie):
 
     # if ST is Unknown adding the nearest ST when is exists
     if ST == "Unknown":
-        plus_proche_st(data["mlst"]["results"]["nearest_sts"])
+        plus_proche_st.append(data["mlst"]["results"]["nearest_sts"])
     else:
-        plus_proche_st("-")
+        plus_proche_st.append("-")
 
     if not plus_proche_st:
         plus_proche_st.append("-")
@@ -68,7 +68,7 @@ def mlst_strain(nom,fasta_dir,fasta_extension,outputdir,specie):
         allele.append(data["mlst"]["results"]["allele_profile"][clef]["allele_name"].replace("_", "-"))
 
     #Creating the res container for each strain
-    res = "{};ST{};{};{}\n".format(nom,ST,",".join(sorted(allele)),"".join(remarque))
+    res = "{};ST{};{};{}\n".format(nom,ST,",".join(sorted(allele)),"".join(plus_proche_st))
 
     #End of the function
     return(res)
