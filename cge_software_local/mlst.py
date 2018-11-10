@@ -106,15 +106,15 @@ def mlst_all(liste,fasta_dir,fasta_extension,outputdir,specie):
     #Launching mlst_strain function
     for nom in travail:
         mlst.append(mlst_strain(nom,fasta_dir,fasta_extension,outputdir,specie))
-#
-    #Cleaning process
-    # subprocess.run(["rm", "-rf", "{}tmp".format(outputdir)])
-    # subprocess.run(["rm", "{}MLST_allele_seq.fsa".format(outputdir)])
-    # subprocess.run(["rm", "{}Hit_in_genome_seq.fsa".format(outputdir)])
-    # subprocess.run(["rm", "{}results_tab.tsv".format(outputdir)])
-    # subprocess.run(["rm", "{}results.txt".format(outputdir)])
-    # subprocess.run(["rm", "{}data.json".format(outputdir)])
 
+    #Cleaning process
+    subprocess.run(["rm", "-rf", "{}tmp".format(outputdir)])
+    subprocess.run(["rm", "{}MLST_allele_seq.fsa".format(outputdir)])
+    subprocess.run(["rm", "{}Hit_in_genome_seq.fsa".format(outputdir)])
+    subprocess.run(["rm", "{}results_tab.tsv".format(outputdir)])
+    subprocess.run(["rm", "{}results.txt".format(outputdir)])
+    subprocess.run(["rm", "{}data.json".format(outputdir)])
+ 
     #End of the function
     return(mlst)
 
