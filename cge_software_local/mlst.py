@@ -36,7 +36,7 @@ def mlst_strain(nom,fasta_dir,fasta_extension,outputdir,specie):
     subprocess.run(["python", "{}".format(mlst), "-i", "{}".format(fasta),\
     "-o", "{}".format(outputdir), "-s", "{}".format(specie), "-p",\
     "{}".format(mlst_db), "-t", "{}".format(outputdir), "-mp", "blastn",\
-    "-x"])
+    "-x", "-q"])
 
     #Made a copy of the results.txt file form mlst.py script
     old_file = "{}results.txt".format(outputdir)
