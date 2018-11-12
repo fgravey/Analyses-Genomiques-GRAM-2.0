@@ -20,4 +20,4 @@ Pour indexer les bases de données **virulencefinder_db** et **serotypefinder_db
 - pmlst --> script python ok
 - resfinder --> script python ok
 - serotypefinder updated 2018-08-03
-- virulencefinder
+- virulencefinder version 2018-10-12
