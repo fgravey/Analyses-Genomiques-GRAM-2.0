@@ -15,5 +15,5 @@ Le script suivant : `/Users/Francois/cge_softwares/mlst/mlst.py` peut fonctionne
 - plasmidfinder 2018-09-28 --> script python [ok](https://github.com/fgravey/Phd_student/blob/master/cge_software_local/plasmidfinder.py)
 - pmlst 2018-09-10 --> script python ok
 - resfinder --> script python ok
-- serotypefinder updated 2018-10-09 -->script python [ok](https://github.com/fgravey/Phd_student/blob/master/cge_software_local/serotypefinder.py)
-- virulencefinder
+- serotypefinder 2018-10-09 -->script python [ok](https://github.com/fgravey/Phd_student/blob/master/cge_software_local/serotypefinder.py)
+- virulencefinder 2018-10-01
