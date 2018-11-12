@@ -7,19 +7,6 @@ import subprocess
 import re
 import json
 
-##### changing path
-liste = '/Volumes/Maxtor/lugdunensis/liste_souches_lugdu_test.txt'
-#working list which contains all the name of the working files
-fasta_dir = '/Users/Francois/Documents/projets/lugdu/fasta_assembled/'
-#directory which contains the fasta
-outputdir = '/Users/Francois/Documents/projets/lugdu/analyses/virulencefinder/' #path to output files
-fasta_extension = '.scfd.fasta'
-nom = '16491'
-specie = 'staphylococcus'
-filename = 'essai'
-
-
-
 def virulencefinder_strain(nom,fasta_dir,fasta_extension,outputdir,specie):
     #### unchanging path
     virulencefinder = '/Users/Francois/Desktop/virulencefinder/virulencefinder.py'
@@ -46,7 +33,7 @@ def virulencefinder_strain(nom,fasta_dir,fasta_extension,outputdir,specie):
         #Launching the virulencefinder.py from cge script
         subprocess.run(["python", "{}".format(virulencefinder), "-i", "{}".format(fasta),\
         "-o","{}".format(outputdir),"-tmp","{}".format(outputdir), "-mp", "blastn",\
-        "-p", "{}".format(database), "-x", "-d", "{}".format(research)])
+        "-p", "{}".format(database),"-d", "{}".format(research),"-q"])
 
         #Parsing the virulencefinder results in the .json file and add all the information in the data variable
         with open('{}data.json'.format(outputdir), 'r') as filin:
@@ -57,6 +44,7 @@ def virulencefinder_strain(nom,fasta_dir,fasta_extension,outputdir,specie):
 
         for espece in donnees.keys():
             for base_donnee in donnees[espece].keys():
+                print("--- database : {} ---".format(base_donnee))
                 if donnees[espece][base_donnee] == 'No hit found':
                     res.append("{0};{1};No hit found;{2};{2};{2};{2};{2}\n"\
                     .format(nom,base_donnee,'-'))
@@ -71,8 +59,8 @@ def virulencefinder_strain(nom,fasta_dir,fasta_extension,outputdir,specie):
     #End of the function
     return(res)
 
-def virulencefinder_strain(nom,fasta_dir,fasta_extension,outputdir,specie):
-    listing all the files which will be working on
+def virulencefinder_all(liste,fasta_dir,fasta_extension,outputdir,specie):
+    #listing all the files which will be working on
     travail = []
     with open(liste, 'r') as filin:
         for nom in filin:
@@ -80,19 +68,59 @@ def virulencefinder_strain(nom,fasta_dir,fasta_extension,outputdir,specie):
 
     # Information
     print("\n")
-    print("Voici la liste des fichiers sur lesquels vous allez travailler : {}\n"\
-    .format("".join(travail)))
+    print("Voici la liste des fichiers sur lesquels vous allez travailler : {}\n".format("".join(travail)))
     print("Le nombre de fichier est de : {}\n".format(len(travail)))
     print("#########################################################")
     print("############ Launching serotypefinder ###################")
     print("#########################################################")
 
-    with open("{}{}".format(outputdir,filename),'w') as filout:
-        # Information
-        print("---> {}{}.csv".format(nom,extension))
-
+    with open("{}{}.csv".format(outputdir,filename),'w') as filout:
         # Writing the output file
         filout.write("Souche;database;Gene;Identity;Coverage;Contig;Position in contig;Protein function\n")
+
         #for each strain in the list, virulencefinder_strain is executed
         for nom in travail:
-            filout.write(virulencefinder_strain(nom,fasta_dir,fasta_extension,outputdir,specie))
+            #Information
+            print("---> {}{}".format(nom,fasta_extension))
+            filout.write("".join(virulencefinder_strain(nom,fasta_dir,fasta_extension,outputdir,specie)))
+            filout.write('\n')
+
+if __name__ == "__main__":
+
+    # Parse command line options
+    ##########################################################################
+    parser = ArgumentParser()
+    parser.add_argument("-l", "--list", dest="list", \
+    help="list which contains all the name of the strains", default='')
+    parser.add_argument("-f", "--fasta_path", dest="fasta_path_dir",\
+    help="Path to the directory which contains all the fasta to analyse", default='')
+    parser.add_argument("-e", "--extension", dest="extension",\
+    help="fasta extension such as .fasta .fa .awked.fasta .agp.fasta", default='')
+    parser.add_argument("-s", "--specie", dest="specie",\
+    help="Which specie are you working on ???? four choices ecoli, staphylococcus, listeria, enterococcus", default='')
+    parser.add_argument("-o", "--outputPath", dest="out_path",\
+    help="Path to blast output", default='')
+    parser.add_argument("-filename", "--filename", dest="filename",\
+    help="summary output file name", default='serotypefinder')
+    args = parser.parse_args()
+
+    ###############################################################################
+    # Variables difinition
+    liste = args.list
+    fasta_dir = args.fasta_path_dir
+    fasta_extension = args.extension
+    specie = args.specie
+    outputdir = args.out_path
+    filename = args.filename
+    ##### changing path
+    liste = '/Users/Francois/Documents/projets/lugdu/liste_souches_lugdu.txt'
+    #working list which contains all the name of the working files
+    fasta_dir = '/Users/Francois/Documents/projets/lugdu/fasta_assembled/'
+    #directory which contains the fasta
+    outputdir = '/Users/Francois/Documents/projets/lugdu/analyses/virulencefinder/'
+    fasta_extension = '.scfd.fasta'
+    specie = 'staphylococcus'
+    filename = 'essai'
+
+
+virulencefinder_all(liste,fasta_dir,fasta_extension,outputdir,specie)
