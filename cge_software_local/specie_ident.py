@@ -3,6 +3,7 @@
 ### Gravey François
 
 import subprocess
+from argparse import ArgumentParser
 
 def specie(nom,fasta_dir,fasta_extension):
     #Variable definition
@@ -14,11 +15,15 @@ def specie(nom,fasta_dir,fasta_extension):
     #Lauching the rmlst script from PubMLST
     res = subprocess.check_output(["python", "{}".format(rmlst), "--file", "{}".format(fasta)])
     res = res.decode("utf-8")
-    return("{};{};{};{};{}\n".format(nom, res.split('\n')[0].split(' ')[1],\
-     res.split('\n')[1].split(":")[1],res.split('\n')[2].split(":")[1],\
-     res.split('\n')[3]))
 
-def specie_all(liste,fasta_dir,fasta_extension):
+    if len(res.split("\n")) == 6:
+        return("{};{};{};{};{}\n".format(nom, res.split('\n')[0].split(' ')[1],\
+        res.split('\n')[1].split(":")[1],res.split('\n')[2].split(":")[1],\
+        res.split('\n')[3]))
+    else:
+        return("{0};No match;{1};{1};{1}\n".format(nom,"-"))
+
+def specie_all(liste,fasta_dir,fasta_extension,outputdir,filename):
     #Container creation : list which will contain all the strains name of the project
     travail = []
     #Reading the name of the strains listed into a .txt file
@@ -69,10 +74,4 @@ if __name__ == "__main__":
     outputdir = args.out_path
     filename = args.filename
 
-nom = 'P1-01'
-liste = "/Users/Francois/Documents/projets/ecoli/Rea_neonat/rea_test.txt"
-fasta_dir = '/Users/Francois/Documents/projets/ecoli/Rea_neonat/fasta/awked_fasta/'
-fasta_extension = '.awked.fasta'
-outputdir = '/Users/Francois/Desktop/essai/'
-filename = 'essai_specie'
-specie_all(liste,fasta_dir,fasta_extension)
+    specie_all(liste,fasta_dir,fasta_extension,outputdir,filename)
