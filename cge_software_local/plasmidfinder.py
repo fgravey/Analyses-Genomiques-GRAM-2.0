@@ -7,8 +7,8 @@ import subprocess
 import re
 from argparse import ArgumentParser
 
-def plasmidfinder_all(liste,fasta_dir, fasta_extension, outputdir):
-    
+def plasmidfinder_all(liste,fasta_dir, fasta_extension, outputdir, specie):
+
     """ Looking for plasmids carried by strains using the plasmidfinder.pl script
     - Inputs : liste = .txt file which contains all the studied strains
                fasta_dir = path to the directory which contains all the fasta files
@@ -43,8 +43,8 @@ def plasmidfinder_all(liste,fasta_dir, fasta_extension, outputdir):
 
     for nom in travail:
         #Variables creation
-        fasta = "{}/{}{}".format(fasta_dir, nom, fasta_extension)
-        outputdir2 = "{}/{}".format(outputdir,nom)
+        fasta = "{}{}{}".format(fasta_dir, nom, fasta_extension)
+        outputdir2 = "{}{}".format(outputdir,nom)
 
         #Make a specific directory form each strain tested
         subprocess.run(["mkdir", outputdir2])
@@ -54,7 +54,7 @@ def plasmidfinder_all(liste,fasta_dir, fasta_extension, outputdir):
 
         #Launching the plasmidfinder.pl script
         subprocess.run(["python", "{}".format(plasmidfinder), "-p", "{}".format(database),\
-         "-i", "{}".format(fasta), "-o", "{}".format(outputdir2, "-d", "Enterobacteriaceae")])
+         "-i", "{}".format(fasta), "-o", "{}".format(outputdir2, "-d", "{}".format(specie))])
 
         #Creation of a container which will contains the results for each strain
         plasmide = []
@@ -70,8 +70,8 @@ def plasmidfinder_all(liste,fasta_dir, fasta_extension, outputdir):
                 for i in range(1,len(plasmide)):
                     resultats.append("{};{}\n".format(nom,plasmide[i].replace("\t",";")))
 
-        #End of the function
-        return(resultats)
+    #End of the function
+    return(resultats)
 
 if __name__ == "__main__":
     ##########################################################################
@@ -85,6 +85,8 @@ if __name__ == "__main__":
     default='Directory which contains all the fasta files')
     parser.add_argument("-e", "--extension", dest="extension",\
     help="Any informations such as .agp.fasta .awked.fa .scfd.fasta .fasta .fa", default='')
+    parser.add_argument("-s", "--specie", dest="specie",\
+    help="Which type of database would you lie to use ? enterobacteriaceae or gram_positive", default='')
     parser.add_argument("-o", "--outputPath", dest="out_path",help="Path to blast output", default='')
     args = parser.parse_args()
 
@@ -94,8 +96,9 @@ if __name__ == "__main__":
     fasta_dir = args.fasta_dir
     outputdir = args.out_path
     fasta_extension = args.extension
+    specie = args.specie
 
     # Using plasmidfinder_all function
     with open("{}/plasmidfinder_results.csv".format(outputdir), "w") as filout:
-        for res in plasmidfinder_all(liste,fasta_dir, fasta_extension, outputdir):
+        for res in plasmidfinder_all(liste,fasta_dir, fasta_extension, outputdir,specie):
             filout.write(res)
