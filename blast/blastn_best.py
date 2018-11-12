@@ -2,6 +2,7 @@
 ## Novembre 2018
 ### Gravey François
 
+from argparse import ArgumentParser
 import subprocess
 from Bio.Blast.Applications import NcbiblastxCommandline
 from Bio.Blast import NCBIXML
@@ -144,7 +145,6 @@ def blast_nt_best_result(nom,inputdir, threshold):
         format(nom,'-')
 
     #End of the function
-    print(best)
     return(best)
 
 def best_blastn_results_all(liste,outputdir,fasta_dir,fasta_extension,database):
@@ -196,7 +196,7 @@ if __name__ == "__main__":
     parser.add_argument("-db", "--database", dest="database",\
     help="Indicate the name of the fasta file used to create the database", default='')
     parser.add_argument("-filename", "--filename", dest="filename",\
-    help="summary output file name", default='summary_blast')
+    help="summary output file name", default='blastn_best')
     parser.add_argument("-t", "--threshold", dest="threshold",\
     help="minimum percentage of coverage int", default='80')
     args = parser.parse_args()
@@ -207,19 +207,11 @@ if __name__ == "__main__":
     # Variables difinition
     liste = args.list
     fasta_dir = args.fasta_path_dir
-    outputdir = args.out_path
     fasta_extension = args.extension
-    nom_fichier = args.filename
     database = args.database
+    outputdir = args.out_path
     threshold = args.threshold
-
-    liste = '/Users/Francois/Documents/projets/ecloacae/patric_db/patric_fasta.txt'
-    fasta_dir = '/Users/Francois/Documents/projets/ecloacae/patric_db/fasta_patric/'
-    database = '/Users/Francois/blast_data_base/atb_resistance/fosfomycin.fsa'
-    outputdir = '/Users/Francois/Documents/projets/ecloacae/patric_db/analyses/blast/fosfo/'
-    fasta_extension = '.fna'
-    threshold = '90'
-    filename = 'patric_fasta_fosfo'
+    filename = args.filename
 
     best_blastn_results_all(liste,outputdir,fasta_dir,fasta_extension,database)
     clean_xml_blast(outputdir)

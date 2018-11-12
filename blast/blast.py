@@ -17,7 +17,7 @@ def reversecomplement(seq):
     trans = str.maketrans("ATGC", "TACG")
     return seq.translate(trans)[::-1]
 
-def blastn(nom,outputdir,fasta_dir):
+def blastn(nom,outputdir,fasta_dir,fasta_extension,database):
     """Make a directory specific to each strain wich contains two blast files
     first one is a .txt file and the second one is an .xml file.
     The xml file will be parse by bipython
