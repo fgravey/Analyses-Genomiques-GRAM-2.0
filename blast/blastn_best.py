@@ -8,6 +8,11 @@ from Bio.Blast.Applications import NcbiblastxCommandline
 from Bio.Blast import NCBIXML
 import glob
 
+class ReturnValue(object):
+  def __init__(self, best, sequence):
+     self.best = best
+     self.sequence = sequence
+
 def reversecomplement(seq):
     # Make reverse complement strand
     trans = str.maketrans("ATGC", "TACG")
@@ -141,11 +146,12 @@ def blast_nt_best_result(nom,inputdir, threshold):
 
     #If there is no match during the blastn process
     if not best:
+        sequence = '-'
         best = "{0};ND;{1};{1};{1};{1};{1};{1};{1};{1};{1};{1};{1}\n".\
         format(nom,'-')
 
     #End of the function
-    return(best)
+    return(ReturnValue(best,sequence))
 
 def best_blastn_results_all(liste,outputdir,fasta_dir,fasta_extension,database):
     #Container creation : list which will contain all the strains name of the project
@@ -172,7 +178,24 @@ def best_blastn_results_all(liste,outputdir,fasta_dir,fasta_extension,database):
             #Information
             print("---> {}{}".format(nom,fasta_extension))
             blastn(nom,outputdir,fasta_dir,fasta_extension,database)
-            filout.write(blast_nt_best_result(nom,outputdir, threshold))
+            filout.write(blast_nt_best_result(nom,outputdir, threshold).best)
+
+def multifasta(liste,outputdir,fasta_dir,fasta_extension,database,gene):
+    #Container creation : list which will contain all the strains name of the project
+    travail = []
+    #Reading the name of the strains listed into a .txt file
+    with open(liste, "r") as filin:
+        for nom in filin:
+            travail.append(nom[:-1])
+    with open("{}{}_multi_fasta.fasta".format(outputdir,gene), "w") as filout:
+        for nom in travail:
+            info = blast_nt_best_result(nom,outputdir, threshold).best
+            sequence = blast_nt_best_result(nom,outputdir, threshold).sequence
+            if sequence != '-':
+                filout.write(">{}_{}\n".format(info.split(";")[1],\
+                info.split(";")[0]))
+                for an in range(0,len(sequence),80):
+                    filout.write(sequence[an:an+80]+'\n')
 
 def clean_xml_blast(path):
     #Listing all the files which corresponding to the research which are in the directory
@@ -199,6 +222,8 @@ if __name__ == "__main__":
     help="summary output file name", default='blastn_best')
     parser.add_argument("-t", "--threshold", dest="threshold",\
     help="minimum percentage of coverage int", default='80')
+    parser.add_argument("-g", "--gene", dest="gene",\
+    help="name of the gene you are working on", default='gene')
     args = parser.parse_args()
 
     ###############################################################################
@@ -212,6 +237,8 @@ if __name__ == "__main__":
     outputdir = args.out_path
     threshold = args.threshold
     filename = args.filename
+    gene = args.gene
 
     best_blastn_results_all(liste,outputdir,fasta_dir,fasta_extension,database)
+    multifasta(liste,outputdir,fasta_dir,fasta_extension,database,gene)
     clean_xml_blast(outputdir)
