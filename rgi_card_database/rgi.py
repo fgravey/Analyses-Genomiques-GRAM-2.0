@@ -42,16 +42,22 @@ print("Le nombre de fichier est de : {}".format(len(travail)))
 ###############################################################################
 #launching rgi software
 for nom in travail:
-    fasta = "{}/{}{}".format(fasta_dir, nom, fasta_extension)
-    subprocess.run(["rgi", "main", "--input_sequence", "{}".format(fasta), "--output_file",\
-     "{}/{}".format(outputdir,nom), "--input_type", "contig"])
+    #Variable definition
+    fasta = "{}{}{}".format(fasta_dir, nom, fasta_extension)
+
+    # Information
+    print("---> {}{}".format(nom,fasta_extension))
+
+    subprocess.run(["rgi", "main", "-i", "{}".format(fasta), "-o",\
+    "{}{}".format(outputdir,nom), "-t", "contig", "-a", "BLAST"])
 
 ###############################################################################
-# Cleaning the temporary files
+#Cleaning the temporary files
 for fichier in glob.glob("{}/*.temp*".format(outputdir)):
     subprocess.run(["rm", fichier])
-
+#
 ###############################################################################
-# Creating the heatmap and clustering the strains based on atb resistance genes
-subprocess.run(["rgi", "heatmap", "-i", "{}".format(outputdir), "-clus", "samples",\
-"-o", "{}".format(outputdir)])
+#Creating the heatmap and clustering the strains based on atb resistance genes
+# subprocess.run(["rgi", "heatmap", "-i", "{}".format(outputdir), "-clus", "samples",\
+# "-o", "{}".format(outputdir)])
+#
