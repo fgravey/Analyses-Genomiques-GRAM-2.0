@@ -41,15 +41,31 @@ def parse_cd_hit(input_file):
     #End of function
     return(dico)
 
-input_file = '/Users/Francois/Documents/projets/ecloacae/patric_db/analyses/\
-blast/romr_roma/clustering/romR_clustering.fasta.clstr'
-gene = 'romR'
-outputdir = '/Users/Francois/Documents/projets/ecloacae/patric_db/analyses/\
-blast/romr_roma/clustering/'
-filename = 'romr_clustering'
+if __name__ == "__main__":
 
-with open("{}{}.csv".format(outputdir, filename), 'w') as filout:
-    filout.write("Souche;{}_cd-hit_cluster\n".format(gene))
-    for cluster in parse_cd_hit(input_file).keys():
-        for fasta in parse_cd_hit(input_file)[cluster]:
-            filout.write("{};{}{}\n".format(fasta, gene,cluster.replace(">", "_")))
+    # Parse command line options
+    ##########################################################################
+    parser = ArgumentParser()
+    parser.add_argument("-i", "--input_file", dest="input_file",\
+    help="absolute path to the cd hits .clstr file", default='')
+    parser.add_argument("-g", "--gene", dest="gene",\
+    help="gene you are working on", default='')
+    parser.add_argument("-o", "--outputPath", dest="out_path",\
+    help="Path to putt the .csv file", default='')
+    parser.add_argument("-filename", "--filename", dest="filename",\
+    help="summary output file name", default='clustering_cd_hits')
+    args = parser.parse_args()
+
+    ###############################################################################
+    # Variables difinition
+    input_file = args.input_file
+    gene = args.gene
+    outputdir = args.out_path
+    filename = args.filename
+
+    with open("{}{}.csv".format(outputdir, filename), 'w') as filout:
+        filout.write("Souche;{}_cd-hits_cluster\n".format(gene))
+        for cluster in parse_cd_hit(input_file).keys():
+            for fasta in parse_cd_hit(input_file)[cluster]:
+                filout.write("{};{}_{}\n".format(fasta[1:].replace(" ",""),\
+                 gene,cluster.replace(">", "").replace(" ","_")))
