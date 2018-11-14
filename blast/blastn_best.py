@@ -192,8 +192,8 @@ def multifasta(liste,outputdir,fasta_dir,fasta_extension,database,gene):
             info = blast_nt_best_result(nom,outputdir, threshold).best
             sequence = blast_nt_best_result(nom,outputdir, threshold).sequence
             if sequence != '-':
-                filout.write(">{}_{}\n".format(info.split(";")[1],\
-                info.split(";")[0]))
+                filout.write(">{}_{}\n".format(info.split(";")[0],\
+                info.split(";")[1]))
                 for an in range(0,len(sequence),80):
                     filout.write(sequence[an:an+80]+'\n')
 
