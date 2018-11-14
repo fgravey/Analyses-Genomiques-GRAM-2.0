@@ -4,64 +4,77 @@
 
 import re
 
-## Regex definition
-#regex specific to header lines in the beguining og the vcf file
-regex = re.compile('^"')
-#regex specific to header lines in the beguining og the vcf file
-regex_2 = re.compile('^#')
+class ReturnValue(object):
+  def __init__(self, position, information):
+     self.position = position
+     self.information = information
+
+
+
 #Regex in order to not include CDS into the research
 regex_3 = re.compile('CDS')
 
 #Container definition
-pos_vcf_1 = []
-pos_vcf_2 = []
-dico_1 = {}
-dico_2 = {}
+
 discordance_1 = []
 discordance_2 = []
 
-with open("/Users/Francois/Desktop/FAY1_test.vcf", 'r') as filin:
-    for ligne in filin:
-        #Parsing the file and do not take all the headers lines in the beguining of the file
-        if regex.search(ligne) == None and regex_2.search(ligne) == None:
-            # for each position in the vcf file adding it in the pos_vcf_1 list
-            pos_vcf_1.append("{}:{}:{}".format(ligne.split('\t')[1],\
-            ligne.split('\t')[3],ligne.split('\t')[4]))
-            dico_1[ligne.split('\t')[1]] = "{},{},{},{},{}".format(\
-            ligne.split('\t')[3],ligne.split('\t')[4],ligne.split('\t')[5],\
-            ligne.split('\t')[7],ligne.split('\t')[8])
-#
+def read_vcf(file):
+    ## Regex definition
+    #regex specific to header lines in the beguining og the vcf file
+    regex = re.compile('^"')
+    regex_2 = re.compile('^#')
 
-with open("/Users/Francois/Desktop/FAY2_test.vcf", 'r') as filin:
-    for ligne in filin:
-        #Parsing the file and do not take all the headers lines in the beguining of the file
-        if regex.search(ligne) == None and regex_2.search(ligne) == None:
-            # for each position in the vcf file adding it in the pos_vcf_1 list
-            pos_vcf_2.append("{}:{}:{}".format(ligne.split('\t')[1],\
-            ligne.split('\t')[3],ligne.split('\t')[4]))
-#
-print(dico_1)
-print(pos_vcf_1)
-print(pos_vcf_2)
+    #Container definition
+    position = []
+    information = {}
 
-for pos in pos_vcf_1:
-    if pos in pos_vcf_2:
-        continue
+    with open(file, 'r') as filin:
+        for ligne in filin:
+            #Parsing the file and do not take all the headers lines in the beguining of the file
+            if regex.search(ligne) == None and regex_2.search(ligne) == None:
+                # Variable definition
+                pos = ligne.split('\t')[1] #position in the genome of the ref
+                nt_ref = ligne.split('\t')[3] #nucleotide in the ref genome
+                nt_strain = ligne.split('\t')[4] #nucleotide in the genome of the strain
+                qual = ligne.split('\t')[5] #Quality score of the mapping
+                info = ligne.split('\t')[7] #information in the .vcf file about the SNP calling
+                form = ligne.split('\t')[8] #format header in the .vcf file
+
+                position.append("{}:{}:{}".format(pos,nt_ref,nt_strain))
+
+                information[pos] = "{},{},{},{},{}".format(nt_ref,nt_strain,qual,info,form)
+
+    #End of function
+    return ReturnValue(position,information)
+
+def discordance(file1,file2):
+    """Look for snp with are present into the file1 but not into the file2
+    regarding the position of the nucleotides and the nature of the substitutions"""
+
+    # Container definition
+    discor = [] #list which will contain all the snp fond in the file one but not in the file2
+
+    for pos in read_vcf(file1).position:
+        if pos in read_vcf(file2).position:
+            continue
     else:
-        discordance_1.append("{}".format(pos))
+        #Only keeping the numerical position of the snp, leaving the nature of the substitutions
+        pos = pos.split(":")[0]
+        discor.append("{}".format(pos))
 
-for pos in pos_vcf_2:
-    if pos in pos_vcf_1:
-        continue
-    else:
-        discordance_2.append("{}".format(pos))
+    #End of the function
+    return(discor)
+
+
+# for pos in pos_vcf_2:
+    # if pos in pos_vcf_1:
+        # continue
+    # else:
+        # discordance_2.append("{}".format(pos))
 #
-print(discordance_1)
-print(discordance_2)
-distance = (len(discordance_1) + len(discordance_2))
-print(distance)
-# print(len(discordance_1))
-# print(len(discordance_2))
+#
+# distance = (len(discordance_1) + len(discordance_2))
 #
 # bed = []
 # with open("/Users/Francois/Desktop/CP012165_1.bed", "r") as filin:
@@ -71,13 +84,30 @@ print(distance)
             # info = [ligne.split("\t")[1], ligne.split("\t")[2], ligne.split("\t")[7], ligne.split("\t")[9]]
             # bed.append(info)
 #
-# genes_interets_1 = []
+#
+# snp_interets_1 = []
 # for snp in discordance_1:
     # for pos in bed:
-        # if int(pos[0]) <= int(snp) and int(pos[1]) > int(snp):
-            # genes_interets_1.append(pos)
+        # if int(pos[0]) <= int(snp.split(":")[0]) and int(pos[1]) > int(snp.split(":")[0]):
+            #variable definition
+            # snp_position = snp.split(":")[0]
+            # snp_information = dico_1[snp.split(":")[0]]
+            # gene_start = pos[0]
+            # gene_end = pos[1]
+            # type = pos[2]
+            # gene_info = pos[3]
 #
+            #Adding all the snp of interest into the snp_interets_1 list
+            # snp_interets_1.append("SNP,{},{},{},{},{},{}".format(snp_position,\
+            # snp_information,gene_start, gene_end, type,gene_info))
 #
+file1 = "/Users/Francois/Desktop/FAY1_test.vcf"
+file2 = "/Users/Francois/Desktop/FAY2_test.vcf"
+
+snp_vcf_2 = read_vcf(file2).position
+print(read_vcf(file2).information)
+print(snp_vcf_2)
+
 # genes_interets_2 = []
 # for snp in discordance_2:
     # for pos in bed:
