@@ -14,11 +14,6 @@ class ReturnValue(object):
 #Regex in order to not include CDS into the research
 regex_3 = re.compile('CDS')
 
-#Container definition
-
-discordance_1 = []
-discordance_2 = []
-
 def read_vcf(file):
     ## Regex definition
     #regex specific to header lines in the beguining og the vcf file
@@ -59,23 +54,29 @@ def discordance(file1,file2):
         if pos in read_vcf(file2).position:
             continue
     else:
-        #Only keeping the numerical position of the snp, leaving the nature of the substitutions
-        pos = pos.split(":")[0]
         discor.append("{}".format(pos))
 
     #End of the function
     return(discor)
 
+def verif_snp(file1,file2):
+    #Variable definition
+    liste1 = discordance(file1,file2) #Contained all the snp in the file1 but not in the file2
+    liste2 = discordance(file2,file1) #Contained all the snp in the file2 but not in the file1
 
-# for pos in pos_vcf_2:
-    # if pos in pos_vcf_1:
-        # continue
-    # else:
-        # discordance_2.append("{}".format(pos))
-#
-#
+    if len(liste1) == 0 and len(liste2) == 0:
+        for snp in liste1:
+            if snp in liste2:
+                print("ALERTE FILRTE FAILED")
+                break
+
+        for snp in liste2:
+            if snp in liste1:
+                print("ALERTE FILRTE FAILED")
+                break
+
 # distance = (len(discordance_1) + len(discordance_2))
-#
+
 # bed = []
 # with open("/Users/Francois/Desktop/CP012165_1.bed", "r") as filin:
     # for ligne in filin:
@@ -104,9 +105,8 @@ def discordance(file1,file2):
 file1 = "/Users/Francois/Desktop/FAY1_test.vcf"
 file2 = "/Users/Francois/Desktop/FAY2_test.vcf"
 
-snp_vcf_2 = read_vcf(file2).position
-print(read_vcf(file2).information)
-print(snp_vcf_2)
+print(discordance(file1,file2))
+print(verif_snp(file1,file2))
 
 # genes_interets_2 = []
 # for snp in discordance_2:
