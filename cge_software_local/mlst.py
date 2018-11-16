@@ -58,13 +58,16 @@ def mlst_strain(nom,fasta_dir,fasta_extension,outputdir,specie):
     mlst_db = '/Users/Francois/cge_data_bases/mlst_db'
 
     #Variable definition
-    fasta = "{}{}{}".format(fasta_dir,nom,fasta_extension)
+    file = "{}{}{}".format(fasta_dir,nom,fasta_extension)
 
     #Information
     print("---> {}{}".format(nom, fasta_extension))
 
+    #looking for file extension
+
+
     #Launching mlst.py script from cge internet site
-    subprocess.run(["python", "{}".format(mlst), "-i", "{}".format(fasta),\
+    subprocess.run(["python", "{}".format(mlst), "-i", "{}".format(file),\
     "-o", "{}".format(outputdir), "-s", "{}".format(specie), "-p",\
     "{}".format(mlst_db), "-t", "{}".format(outputdir), "-mp", "blastn",\
     "-x", "-q"])
