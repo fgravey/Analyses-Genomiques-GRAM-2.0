@@ -10,38 +10,6 @@ import os.path
 from shutil import copyfile
 import json
 
-def get_file_format(input_files):
-    """
-    Takes all input files and checks their first character to assess
-    the file format. Returns one of the following strings; fasta, fastq,
-    other or mixed. fasta and fastq indicates that all input files are
-    of the same format, either fasta or fastq. other indiates that all
-    files are not fasta nor fastq files. mixed indicates that the inputfiles
-    are a mix of different file formats.
-    """
-
-    # Open all input files and get the first character
-    file_format = []
-    invalid_files = []
-    for infile in input_files:
-        if is_gzipped(infile):#[-3:] == ".gz":
-            f = gzip.open(infile, "rb")
-            fst_char = f.read(1);
-        else:
-            f = open(infile, "rb")
-            fst_char = f.read(1);
-        f.close()
-        # Assess the first character
-        if fst_char == b"@":
-            file_format.append("fastq")
-        elif fst_char == b">":
-            file_format.append("fasta")
-        else:
-            invalid_files.append("other")
-    if len(set(file_format)) != 1:
-        return "mixed"
-    return ",".join(set(file_format))
-
 def mlst_strain(nom,fasta_dir,fasta_extension,outputdir,specie):
 
     """ Use the mlst.py created by cge in order to determine the Sequence Type of the strains
@@ -64,15 +32,15 @@ def mlst_strain(nom,fasta_dir,fasta_extension,outputdir,specie):
     print("---> {}{}".format(nom, fasta_extension))
 
     #looking for file extension
-    if get_file_format(file) == "fasta":
-        method = "blastn"
-    elif get_file_format(file) = "fastq"
-        mehtod = "kma"
-    elif get_file_format(file) = "mixed"
-        print("ERROR in the input file which contains fasta and fastq header,\
-        please check your input file")
-        break
+    ## regex definition
+    regex_fasta = re.compile(".fasta")
+    regex_fastq = re.compile(".fastq")
 
+    method = ''
+    if regex_fasta.search(file):
+        method = "blastn"
+    elif regex_fastq.search(file):
+        mehtod = "kma"
 
     #Launching mlst.py script from cge internet site
     subprocess.run(["python", "{}".format(mlst), "-i", "{}".format(file),\
