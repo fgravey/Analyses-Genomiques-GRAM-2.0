@@ -64,12 +64,20 @@ def mlst_strain(nom,fasta_dir,fasta_extension,outputdir,specie):
     print("---> {}{}".format(nom, fasta_extension))
 
     #looking for file extension
+    if get_file_format(file) == "fasta":
+        method = "blastn"
+    elif get_file_format(file) = "fastq"
+        mehtod = "kma"
+    elif get_file_format(file) = "mixed"
+        print("ERROR in the input file which contains fasta and fastq header,\
+        please check your input file")
+        break
 
 
     #Launching mlst.py script from cge internet site
     subprocess.run(["python", "{}".format(mlst), "-i", "{}".format(file),\
     "-o", "{}".format(outputdir), "-s", "{}".format(specie), "-p",\
-    "{}".format(mlst_db), "-t", "{}".format(outputdir), "-mp", "blastn",\
+    "{}".format(mlst_db), "-t", "{}".format(outputdir), "-mp", "{}".format(method),\
     "-x", "-q"])
 
     #Made a copy of the results.txt file form mlst.py script
