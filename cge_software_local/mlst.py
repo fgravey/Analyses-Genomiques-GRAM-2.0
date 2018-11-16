@@ -10,6 +10,37 @@ import os.path
 from shutil import copyfile
 import json
 
+def get_file_format(input_files):
+    """
+    Takes all input files and checks their first character to assess
+    the file format. Returns one of the following strings; fasta, fastq,
+    other or mixed. fasta and fastq indicates that all input files are
+    of the same format, either fasta or fastq. other indiates that all
+    files are not fasta nor fastq files. mixed indicates that the inputfiles
+    are a mix of different file formats.
+    """
+
+    # Open all input files and get the first character
+    file_format = []
+    invalid_files = []
+    for infile in input_files:
+        if is_gzipped(infile):#[-3:] == ".gz":
+            f = gzip.open(infile, "rb")
+            fst_char = f.read(1);
+        else:
+            f = open(infile, "rb")
+            fst_char = f.read(1);
+        f.close()
+        # Assess the first character
+        if fst_char == b"@":
+            file_format.append("fastq")
+        elif fst_char == b">":
+            file_format.append("fasta")
+        else:
+            invalid_files.append("other")
+    if len(set(file_format)) != 1:
+        return "mixed"
+    return ",".join(set(file_format))
 
 def mlst_strain(nom,fasta_dir,fasta_extension,outputdir,specie):
 
@@ -114,7 +145,7 @@ def mlst_all(liste,fasta_dir,fasta_extension,outputdir,specie):
     subprocess.run(["rm", "{}results_tab.tsv".format(outputdir)])
     subprocess.run(["rm", "{}results.txt".format(outputdir)])
     subprocess.run(["rm", "{}data.json".format(outputdir)])
- 
+
     #End of the function
     return(mlst)
 
